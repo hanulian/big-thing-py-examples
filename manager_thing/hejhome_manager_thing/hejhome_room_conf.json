@@ -1,17 +1,11 @@
 {
-  "select": "[ROOM_NAME1]",
-  "room_list": [
+  "select": "caplab",
+  "account_list": [
     {
-      "room_name": "[ROOM_NAME1]",
-      "bridge_ip": "http://https://goqual.io/openapi",
+      "account_name": "caplab",
+      "bridge_ip": "https://goqual.io/openapi",
       "bridge_port": 80,
-      "user_key": "[HEJHOME_API_KEY1]"
-    },
-    {
-      "room_name": "[ROOM_NAME2]",
-      "bridge_ip": "http://https://goqual.io/openapi",
-      "bridge_port": 80,
-      "user_key": "[HEJHOME_API_KEY2]"
+      "user_key": "16502431-6249-474c-aeb0-f2d18e66aaac"
     }
   ]
 }

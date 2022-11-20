@@ -2,13 +2,15 @@ from big_thing_py.manager_thing import *
 
 from hejhome_staff_thing import *
 from hejhome_utils import *
+import pika
 
 
 class SoPHejhomeManagerThing(SoPManagerThing):
     def __init__(self, name: str, service_list: List[SoPService], alive_cycle: float, is_super: bool = False, is_parallel: bool = True,
                  ip: str = None, port: int = None, ssl_ca_path: str = None, ssl_enable: bool = None, log_name: str = None, log_enable: bool = True, log_mode: SoPPrintMode = SoPPrintMode.ABBR, append_mac_address: bool = True,
                  mode: SoPManagerMode = SoPManagerMode.SPLIT, network_type: SoPNetworkType = SoPNetworkType.MQTT, scan_cycle=5,
-                 bridge_ip='', bridge_port=80, user_key='', conf_file_path: str = 'hejhome_room_conf.json',):
+                 bridge_ip='', bridge_port=80, user_key='', conf_file_path: str = 'hejhome_room_conf.json',
+                 client_id: str = '', client_secret: str = ''):
         super().__init__(name, service_list, alive_cycle, is_super, is_parallel, ip, port, ssl_ca_path,
                          ssl_enable, log_name, log_enable, log_mode, append_mac_address, mode, network_type, scan_cycle)
         self._staff_thing_list: List[SoPHejhomeStaffThing] = []
@@ -26,6 +28,14 @@ class SoPHejhomeManagerThing(SoPManagerThing):
             "Content-Type": "application/json;charset-UTF-8"
         }
 
+        self._client_id = client_id
+        self._client_secret = client_secret
+
+        # Threading
+        self._thread_func_list += [
+            self.AMQP_listening_thread_func
+        ]
+
     def setup(self, avahi_enable=True):
         self.load_config()
 
@@ -40,7 +50,60 @@ class SoPHejhomeManagerThing(SoPManagerThing):
     #  \__||_| |_||_|    \___| \__,_| \__,_| |_|   \__,_||_| |_| \___| \__||_| \___/ |_| |_||___/
     # ===========================================================================================
 
-    # nothing to add...
+    def AMQP_listening_thread_func(self, stop_event: Event):
+        try:
+            while not stop_event.wait(self.MANAGER_THREAD_TIME_OUT):
+                credentials = pika.PlainCredentials(
+                    self._client_id, self._client_secret)
+                cxt = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+                ssl_options = pika.SSLOptions(
+                    context=cxt, server_hostname="goqual.io")
+                connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(
+                        host='goqual.io',
+                        port=55001,
+                        credentials=credentials,
+                        ssl_options=ssl_options
+                    ))
+                channel = connection.channel()
+
+                # channel.queue_declare(queue=self._client_id)
+
+                def callback(ch, method, properties, body):
+                    # {'deviceDataReport': {'productKey': '4tljkbw8dadvdeay', 'dataId': 'AAXtA6uz9Bvw9AHL9C5YhsAfC', 'status': [{'1': 'pir', 'code': 'pir', 't': 1667974904937, 'value': 'pir'}], 'devId': '84706765c82b960c4297'}, 'deviceStatusReport': None}
+                    # {'deviceDataReport': {'productKey': '4tljkbw8dadvdeay', 'dataId': 'AAXtA6u2te89AHL9C5YhsAfD', 'status': [{'1': 'none', 'code': 'pir', 't': 1667974905116, 'value': 'none'}], 'devId': '84706765c82b960c4297'}, 'deviceStatusReport': None}
+                    # {'deviceDataReport': {'productKey': 'bxphqrhbh45k0hpu', 'dataId': 'AAXtA6v9BjuhjFwRnYlEDYC', 'status': [{'code': 'cur_voltage', 't': 1667974909824, 'value': 2228, '20': '2228'}], 'devId': 'ebcbfbd4976307a137qq1c'}, 'deviceStatusReport': None}
+
+                    json_body = json.loads(body)
+                    print(f" [AMQP] Received {json_body}")
+
+                    devId = json_body['deviceDataReport']['devId']
+                    # dataId = json_body['deviceDataReport']['dataId']
+                    status = json_body['deviceDataReport']['status']
+                    pir_status = status[0]
+
+                    for staff_thing in self._staff_thing_list:
+                        if staff_thing._device_id == devId:
+                            if isinstance(staff_thing, SoPRadarPIRSensorHejhomeStaffThing):
+                                if pir_status['value'] == 'pir':
+                                    staff_thing._pir_status = pir_status
+                                    break
+
+                channel.basic_consume(queue=self._client_id,
+                                      on_message_callback=callback, auto_ack=True)
+
+                print(' [*] Waiting for messages. To exit press CTRL+C')
+                channel.start_consuming()
+
+                if msg is None:
+                    # print('msg is None...')
+                    continue
+                else:
+                    self._staff_receive_queue.put(msg)
+        except Exception as e:
+            stop_event.set()
+            print_error(e)
+            return False
 
     # ====================================================================================================================
     #  _                        _  _        ___  ___ _____  _____  _____
@@ -403,6 +466,25 @@ class SoPHejhomeManagerThing(SoPManagerThing):
         elif deviceType == 'IrTv':
             hejhome_child_thing = SoPIrTvHejhomeStaffThing(
                 name=f'{deviceType}_{uniqueid}', service_list=[], alive_cycle=60 * 60, bridge_ip=self._bridge_ip, user_key=self._user_key, header=self._header, home_id=home_id, room_id=room_id, device_id=uniqueid)
+        elif deviceType == 'SensorRadar':
+            hejhome_child_thing = SoPRadarPIRSensorHejhomeStaffThing(
+                name=f'{deviceType}_{uniqueid}', service_list=[], alive_cycle=60 * 60, bridge_ip=self._bridge_ip, user_key=self._user_key, header=self._header, home_id=home_id, room_id=room_id, device_id=uniqueid)
+            get_pir_status_func = SoPFunction(
+                name='get_pir_status', func=hejhome_child_thing.get_pir_status,
+                return_type=type_converter(
+                    get_function_return_type(hejhome_child_thing.get_pir_status)),
+                arg_list=[])
+
+            staff_function_list: List[SoPFunction] = [get_pir_status_func]
+            staff_value_list: List[SoPValue] = []
+            staff_service_list: List[SoPService] = staff_value_list + \
+                staff_function_list
+
+            for staff_service in staff_service_list:
+                for tag in tag_list:
+                    staff_service.add_tag(tag)
+
+                hejhome_child_thing._add_service(staff_service)
         else:
             SOPLOG_DEBUG('Unexpected function!!!', 'red')
 

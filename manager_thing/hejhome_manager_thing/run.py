@@ -40,7 +40,8 @@ def generate_thing(args):
     client = SoPHejhomeManagerThing(name=args.name, ip=args.host, port=args.port,
                                     bridge_ip=args.bridge_host, bridge_port=args.bridge_port, alive_cycle=args.alive_cycle, service_list=[],
                                     user_key=args.user_key, mode=args.mode,
-                                    scan_cycle=args.scan_cycle, conf_file_path=args.config)
+                                    scan_cycle=args.scan_cycle, conf_file_path=args.config,
+                                    client_id='0e4d0b78e11943539c1495b4f681e65d', client_secret='dd9d82fad93c446ea230155ebc1c035e')
     client.setup(avahi_enable=False)
     client.run()
 
