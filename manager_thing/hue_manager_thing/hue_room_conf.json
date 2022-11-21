@@ -1,17 +1,17 @@
 {
-  "select": "[ROOM_NAME1]",
+  "select": "caplab",
   "room_list": [
     {
-      "room_name": "[ROOM_NAME1]",
-      "bridge_ip": "http://[HUE_BRIDGE_HOST1]/api/",
+      "room_name": "caplab",
+      "bridge_ip": "http://147.46.114.165/api/",
       "bridge_port": 80,
-      "user_key": "[HUE_API_KEY1]"
+      "user_key": "L-idzo6XFfRVA-DzXyA66xKzi-KxIJA75neakYyS"
     },
     {
-      "room_name": "[ROOM_NAME2]",
-      "bridge_ip": "http://[HUE_BRIDGE_HOST2]/api/",
+      "room_name": "gulliver",
+      "bridge_ip": "http://147.46.216.33/api/",
       "bridge_port": 80,
-      "user_key": "[HUE_API_KEY2]"
+      "user_key": "xPPceif9YKzza6M7BI0qCSuY32buKqE6XMjgadL4"
     }
   ]
 }

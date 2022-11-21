@@ -190,6 +190,14 @@ class SoPHueManagerThing(SoPManagerThing):
                     self._bridge_ip = room['bridge_ip'].strip('/')
                     self._bridge_port = int(room['bridge_port'])
                     self._user_key = room['user_key']
+                    self._header = {
+                        "Authorization": f"Bearer {self._user_key}",
+                        # "Host": self.bridge_ip,
+                        # "Referer": "https://{host}".format(host=self.host),
+                        # "Accept": "*/*",
+                        # "Connection": "close",
+                        "Content-Type": "application/json;charset-UTF-8"
+                    }
         elif self._bridge_ip == '' or self._bridge_ip == None:
             SOPLOG_DEBUG('bridge ip is empty. exit program...', 'red')
             raise Exception('HueConfigFileNotExist')
