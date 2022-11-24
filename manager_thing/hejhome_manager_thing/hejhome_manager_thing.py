@@ -476,24 +476,25 @@ class SoPHejhomeManagerThing(SoPManagerThing):
             hejhome_child_thing = SoPIrTvHejhomeStaffThing(
                 name=f'{deviceType}_{uniqueid}', service_list=[], alive_cycle=60 * 60, bridge_ip=self._bridge_ip, user_key=self._user_key, header=self._header, home_id=home_id, room_id=room_id, device_id=uniqueid)
         elif deviceType == 'SensorRadar':
-            hejhome_child_thing = SoPRadarPIRSensorHejhomeStaffThing(
-                name=f'{deviceType}_{uniqueid}', service_list=[], alive_cycle=60 * 60, bridge_ip=self._bridge_ip, user_key=self._user_key, header=self._header, home_id=home_id, room_id=room_id, device_id=uniqueid)
-            get_pir_status_func = SoPFunction(
-                name='get_pir_status', func=hejhome_child_thing.get_pir_status,
-                return_type=type_converter(
-                    get_function_return_type(hejhome_child_thing.get_pir_status)),
-                arg_list=[])
+            if self._client_id and self._client_secret:
+                hejhome_child_thing = SoPRadarPIRSensorHejhomeStaffThing(
+                    name=f'{deviceType}_{uniqueid}', service_list=[], alive_cycle=60 * 60, bridge_ip=self._bridge_ip, user_key=self._user_key, header=self._header, home_id=home_id, room_id=room_id, device_id=uniqueid)
+                get_pir_status_func = SoPFunction(
+                    name='get_pir_status', func=hejhome_child_thing.get_pir_status,
+                    return_type=type_converter(
+                        get_function_return_type(hejhome_child_thing.get_pir_status)),
+                    arg_list=[])
 
-            staff_function_list: List[SoPFunction] = [get_pir_status_func]
-            staff_value_list: List[SoPValue] = []
-            staff_service_list: List[SoPService] = staff_value_list + \
-                staff_function_list
+                staff_function_list: List[SoPFunction] = [get_pir_status_func]
+                staff_value_list: List[SoPValue] = []
+                staff_service_list: List[SoPService] = staff_value_list + \
+                    staff_function_list
 
-            for staff_service in staff_service_list:
-                for tag in tag_list:
-                    staff_service.add_tag(tag)
+                for staff_service in staff_service_list:
+                    for tag in tag_list:
+                        staff_service.add_tag(tag)
 
-                hejhome_child_thing._add_service(staff_service)
+                    hejhome_child_thing._add_service(staff_service)
         else:
             SOPLOG_DEBUG('Unexpected function!!!', 'red')
 
