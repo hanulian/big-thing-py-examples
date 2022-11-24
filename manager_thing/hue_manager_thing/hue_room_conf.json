@@ -1,17 +1,9 @@
 {
-  "select": "[ROOM_NAME1]",
   "room_list": [
     {
-      "room_name": "[ROOM_NAME1]",
-      "bridge_ip": "http://https://goqual.io/openapi",
-      "bridge_port": 80,
-      "user_key": "[HEJHOME_API_KEY1]"
-    },
-    {
-      "room_name": "[ROOM_NAME2]",
-      "bridge_ip": "http://https://goqual.io/openapi",
-      "bridge_port": 80,
-      "user_key": "[HEJHOME_API_KEY2]"
+      "name": "[ROOM_NAME1]",
+      "endpoint_host": "http://[HUE_BRIDGE_HOST1]/api/",
+      "api_token": "[HUE_API_KEY1]"
     }
   ]
 }

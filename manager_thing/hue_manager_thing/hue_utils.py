@@ -1,4 +1,14 @@
-from big_thing_py.utils import *
+from big_thing_py.utils.api_util import *
+from big_thing_py.utils.exception_util import *
+import math
+
+
+class HueLightAction(Enum):
+    ON = 'on'
+    OFF = 'off'
+    BRIGHTNESS = 'brightness'
+    COLOR = 'color'
+    STATUS = 'status'
 
 
 def enhance_color(normalized):
@@ -6,9 +16,6 @@ def enhance_color(normalized):
     Convert RGB to Hue color set
     This is based on original code from http://stackoverflow.com/a/22649803
     '''
-
-    import math
-
     if normalized > 0.04045:
         return math.pow((normalized + 0.055) / (1.0 + 0.055), 2.4)
     else:
@@ -16,7 +23,7 @@ def enhance_color(normalized):
 
 
 # FIXME: implement this function
-def rgb_to_xy(r, g, b):
+def rgb_to_xy(r, g, b) -> List[float]:
     rNorm = r / 255.0
     gNorm = g / 255.0
     bNorm = b / 255.0
@@ -36,3 +43,45 @@ def rgb_to_xy(r, g, b):
         yFinal = Y / (X + Y + Z)
 
         return [xFinal, yFinal]
+
+
+def xy_to_rgb(x, y, bri) -> List[float]:
+    z = 1.0 - x - y
+    Y = bri / 255.0  # Brightness of lamp
+    X = (Y / y) * x
+    Z = (Y / y) * z
+    r = X * 1.612 - Y * 0.203 - Z * 0.302
+    g = -X * 0.509 + Y * 1.412 + Z * 0.066
+    b = X * 0.026 - Y * 0.072 + Z * 0.962
+    r = 12.92 * \
+        r if r <= 0.0031308 else (1.0 + 0.055) * pow(r, (1.0 / 2.4)) - 0.055
+    g = 12.92 * \
+        g if g <= 0.0031308 else (1.0 + 0.055) * pow(g, (1.0 / 2.4)) - 0.055
+    b = 12.92 * \
+        b if b <= 0.0031308 else (1.0 + 0.055) * pow(b, (1.0 / 2.4)) - 0.055
+    maxValue = max(r, g, b)
+    r /= maxValue
+    g /= maxValue
+    b /= maxValue
+    r = r * 255
+    if r < 0:
+        r = 255
+    g = g * 255
+    if g < 0:
+        g = 255
+    b = b * 255
+    if b < 0:
+        b = 255
+    return [r, g, b]
+
+
+def verify_hue_request_result(result_list: list):
+    if type(result_list) == list and 'error' in result_list[0]:
+        print_error(result_list[0]['error']['description'])
+        return False
+    else:
+        return True
+
+
+if __name__ == '__main__':
+    print(xy_to_rgb(0.4425, 0.406, 254))
