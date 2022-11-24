@@ -1,15 +1,15 @@
 {
   "select": "[ROOM_NAME1]",
-  "room_list": [
+  "account_list": [
     {
-      "room_name": "[ROOM_NAME1]",
-      "bridge_ip": "http://https://goqual.io/openapi",
+      "account_name": "[ROOM_NAME1]",
+      "bridge_ip": "https://goqual.io/openapi",
       "bridge_port": 80,
       "user_key": "[HEJHOME_API_KEY1]"
     },
     {
-      "room_name": "[ROOM_NAME2]",
-      "bridge_ip": "http://https://goqual.io/openapi",
+      "account_name": "[ROOM_NAME2]",
+      "bridge_ip": "https://goqual.io/openapi",
       "bridge_port": 80,
       "user_key": "[HEJHOME_API_KEY2]"
     }

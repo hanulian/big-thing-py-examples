@@ -32,9 +32,10 @@ class SoPHejhomeManagerThing(SoPManagerThing):
         self._client_secret = client_secret
 
         # Threading
-        self._thread_func_list += [
-            self.AMQP_listening_thread_func
-        ]
+        if self._client_id and self._client_secret:
+            self._thread_func_list += [
+                self.AMQP_listening_thread_func
+            ]
 
     def setup(self, avahi_enable=True):
         self.load_config()
