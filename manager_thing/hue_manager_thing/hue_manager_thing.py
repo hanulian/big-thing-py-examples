@@ -116,7 +116,13 @@ class SoPHueManagerThing(SoPManagerThing):
 
     # override
     def _receive_staff_message(self):
-        pass
+        for staff_thing in self._staff_thing_list:
+            try:
+                staff_msg = staff_thing._receive_queue.get(
+                    timeout=THREAD_TIME_OUT)
+                return staff_msg
+            except Empty:
+                pass
 
     # override
     def _publish_staff_message(self, staff_msg) -> None:
@@ -124,10 +130,15 @@ class SoPHueManagerThing(SoPManagerThing):
 
     # override
     def _parse_staff_message(self, staff_msg) -> Tuple[SoPProtocolType, str, str]:
-        pass
+        protocol = staff_msg['protocol']
+        device_id = staff_msg['device_id']
+        payload = staff_msg['payload']
+
+        return protocol, device_id, payload
 
     # override
-    def _create_staff(self, staff_thing_info) -> SoPStaffThing:
+
+    def _create_staff(self, staff_thing_info) -> SoPHueStaffThing:
         idx = int(staff_thing_info['idx'])
         staff_thing_info = staff_thing_info['staff_thing_info']
         name = staff_thing_info['name'].split(
@@ -164,6 +175,9 @@ class SoPHueManagerThing(SoPManagerThing):
     # override
     def _connect_staff_thing(self, staff_thing: SoPStaffThing) -> bool:
         # api 방식에서는 api 요청 결과에 staff thing이 포함되어 있으면 연결.
+        staff_thing._receive_queue.put(dict(device_id=staff_thing.get_device_id(),
+                                            protocol=SoPProtocolType.Base.TM_REGISTER,
+                                            payload=staff_thing.dump()))
         staff_thing._is_connected = True
 
     # override
@@ -173,14 +187,15 @@ class SoPHueManagerThing(SoPManagerThing):
 
     # override
     def _handle_REGISTER_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> Tuple[str, dict]:
-        pass
+        return staff_thing.get_name(), payload
 
     # override
-    def _handle_UNREGISTER_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> str:
-        pass
+    def _handle_UNREGISTER_staff_message(self, staff_thing: SoPStaffThing) -> str:
+        self._send_TM_UNREGISTER(staff_thing.get_name())
+        staff_thing._staff_registered = False
 
     # override
-    def _handle_ALIVE_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> str:
+    def _handle_ALIVE_staff_message(self, staff_thing: SoPStaffThing) -> str:
         pass
 
     # override

@@ -151,16 +151,14 @@ class SoPHejhomeManagerThing(SoPManagerThing):
 
     # nothing to add...
 
-    # ==================================================================================================================================
-    #  _   _                    _  _                     _                   _                           _
-    # | | | |                  | || |                   | |                 | |                         | |
-    # | |_| |  __ _  _ __    __| || |  ___   ___  _   _ | |__   _ __    ___ | |_ __      __  ___   _ __ | | __  _ __ ___   ___   __ _
-    # |  _  | / _` || '_ \  / _` || | / _ \ / __|| | | || '_ \ | '_ \  / _ \| __|\ \ /\ / / / _ \ | '__|| |/ / | '_ ` _ \ / __| / _` |
-    # | | | || (_| || | | || (_| || ||  __/ \__ \| |_| || |_) || | | ||  __/| |_  \ V  V / | (_) || |   |   <  | | | | | |\__ \| (_| |
-    # \_| |_/ \__,_||_| |_| \__,_||_| \___| |___/ \__,_||_.__/ |_| |_| \___| \__|  \_/\_/   \___/ |_|   |_|\_\ |_| |_| |_||___/ \__, |
-    #                                                                                                                            __/ |
-    #                                                                                                                           |___/
-    # ==================================================================================================================================
+    # ========================
+    #         _    _  _
+    #        | |  (_)| |
+    #  _   _ | |_  _ | | ___
+    # | | | || __|| || |/ __|
+    # | |_| || |_ | || |\__ \
+    #  \__,_| \__||_||_||___/
+    # ========================
 
     # override
     def _scan_staff_thing(self, timeout: float = 5) -> List[dict]:
@@ -198,18 +196,16 @@ class SoPHejhomeManagerThing(SoPManagerThing):
         self._last_scan_time = get_current_time()
         return staff_thing_info_list
 
-    # ========================
-    #         _    _  _
-    #        | |  (_)| |
-    #  _   _ | |_  _ | | ___
-    # | | | || __|| || |/ __|
-    # | |_| || |_ | || |\__ \
-    #  \__,_| \__||_||_||___/
-    # ========================
-
     # override
+
     def _receive_staff_message(self):
-        pass
+        for staff_thing in self._staff_thing_list:
+            try:
+                staff_msg = staff_thing._receive_queue.get(
+                    timeout=THREAD_TIME_OUT)
+                return staff_msg
+            except Empty:
+                pass
 
     # override
     def _publish_staff_message(self, msg):
@@ -217,7 +213,11 @@ class SoPHejhomeManagerThing(SoPManagerThing):
 
     # override
     def _parse_staff_message(self, staff_msg) -> Tuple[SoPProtocolType, str, str]:
-        pass
+        protocol = staff_msg['protocol']
+        device_id = staff_msg['device_id']
+        payload = staff_msg['payload']
+
+        return protocol, device_id, payload
 
     # override
     def _create_staff(self, staff_thing_info: dict) -> SoPHejhomeStaffThing:
@@ -281,6 +281,9 @@ class SoPHejhomeManagerThing(SoPManagerThing):
     # override
     def _connect_staff_thing(self, staff_thing: SoPStaffThing) -> bool:
         # api 방식에서는 api 요청 결과에 staff thing이 포함되어 있으면 연결.
+        staff_thing._receive_queue.put(dict(device_id=staff_thing.get_device_id(),
+                                            protocol=SoPProtocolType.Base.TM_REGISTER,
+                                            payload=staff_thing.dump()))
         staff_thing._is_connected = True
 
     # override
@@ -290,14 +293,15 @@ class SoPHejhomeManagerThing(SoPManagerThing):
 
     # override
     def _handle_REGISTER_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> Tuple[str, dict]:
-        pass
+        return staff_thing.get_name(), payload
 
     # override
-    def _handle_UNREGISTER_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> str:
-        pass
+    def _handle_UNREGISTER_staff_message(self, staff_thing: SoPStaffThing) -> str:
+        self._send_TM_UNREGISTER(staff_thing.get_name())
+        staff_thing._staff_registered = False
 
     # override
-    def _handle_ALIVE_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> str:
+    def _handle_ALIVE_staff_message(self, staff_thing: SoPStaffThing) -> str:
         pass
 
     # override
