@@ -277,7 +277,7 @@ class SoPHueManagerThing(SoPManagerThing):
             raise Exception('invalid action')
 
         if ret:
-            return True
+            return ret
         else:
             return False
 
@@ -323,12 +323,7 @@ class SoPHueManagerThing(SoPManagerThing):
         else:
             raise Exception('invalid action')
 
-        verify_result = verify_hue_request_result(ret)
-        if verify_result:
-            data = ret.json()
-            if 'success' in data[0]:
-                return True
-            else:
-                return False
+        if ret:
+            return ret
         else:
             return False

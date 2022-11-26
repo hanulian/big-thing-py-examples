@@ -386,7 +386,7 @@ class SoPHejhomeManagerThing(SoPManagerThing):
             raise Exception('invalid action')
 
         if ret:
-            return True
+            return ret
         else:
             return False
 
@@ -529,6 +529,6 @@ class SoPHejhomeManagerThing(SoPManagerThing):
             raise Exception('invalid action')
 
         if ret:
-            return True
+            return ret
         else:
             return False

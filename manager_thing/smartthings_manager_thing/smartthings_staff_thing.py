@@ -66,13 +66,19 @@ class SoPRobotVacuumSmartThingsStaffThing(SoPSmartThingsStaffThing):
     def on(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.ON)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def off(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.OFF)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     def make_service_list(self):
         super().make_service_list()
@@ -111,13 +117,19 @@ class SoPTVSmartThingsStaffThing(SoPSmartThingsStaffThing):
     def on(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.ON)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def off(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.OFF)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     def make_service_list(self):
         super().make_service_list()
@@ -156,13 +168,19 @@ class SoPAirPurifierSmartThingsStaffThing(SoPSmartThingsStaffThing):
     def on(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.ON)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def off(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.OFF)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     def make_service_list(self):
         super().make_service_list()

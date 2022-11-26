@@ -315,7 +315,7 @@ class SoPSmartThingsManagerThing(SoPManagerThing):
             raise Exception('invalid action')
 
         if ret:
-            return True
+            return ret
         else:
             return False
 
@@ -363,6 +363,6 @@ class SoPSmartThingsManagerThing(SoPManagerThing):
             raise Exception('invalid action')
 
         if ret:
-            return True
+            return ret
         else:
             return False

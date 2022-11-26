@@ -41,13 +41,19 @@ class SoPHueStaffThing(SoPStaffThing):
     def on(self) -> bool:
         ret = self._device_function_service_func(
             self.idx, HueLightAction.ON)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def off(self) -> bool:
         ret = self._device_function_service_func(
             self.idx, HueLightAction.OFF)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     def add_tag_to_service(self, service_list: List[SoPService]):
         for staff_service in service_list:
@@ -105,13 +111,19 @@ class SoPHueColorStaffThing(SoPHueStaffThing):
     def set_brightness(self, brightness: int) -> bool:
         ret = self._device_function_service_func(
             self.idx, HueLightAction.BRIGHTNESS, brightness)
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def set_color(self, r: int, g: int, b: int) -> bool:
         ret = self._device_function_service_func(
             self.idx, HueLightAction.BRIGHTNESS, (r, g, b))
-        return ret
+        if ret:
+            return ret
+        else:
+            return False
 
     # override
     def make_service_list(self):
