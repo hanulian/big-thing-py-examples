@@ -19,7 +19,7 @@ class SoPHejhomeManagerThing(SoPManagerThing):
     def __init__(self, name: str, service_list: List[SoPService], alive_cycle: float, is_super: bool = False, is_parallel: bool = True,
                  ip: str = None, port: int = None, ssl_ca_path: str = None, ssl_enable: bool = False, log_name: str = None, log_enable: bool = True, log_mode: SoPPrintMode = SoPPrintMode.ABBR, append_mac_address: bool = True,
                  manager_mode: SoPManagerMode = SoPManagerMode.SPLIT, scan_cycle=5,
-                 endpoint_host: str = '', api_token: str = '', conf_file_path: str = 'hejhome_room_conf.json', conf_select: str = '',
+                 endpoint_host: str = '', api_token: str = '', conf_file_path: str = 'hejhome_conf.json', conf_select: str = '',
                  client_id: str = '', client_secret: str = ''):
         super().__init__(name, service_list, alive_cycle, is_super, is_parallel, ip, port, ssl_ca_path,
                          ssl_enable, log_name, log_enable, log_mode, append_mac_address, manager_mode, scan_cycle)
@@ -80,7 +80,7 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                     # api 방식일 때에는 staff thing이 계속 staff_thing_list에 남아있는 것으로 alive를 처리한다.
                     current_time = get_current_time()
                     for staff_thing in self._staff_thing_list:
-                        if current_time - staff_thing._last_alive_time > self._alive_cycle:
+                        if current_time - staff_thing._last_alive_time > staff_thing._alive_cycle:
                             self._send_TM_ALIVE(thing_name=staff_thing._name)
                             staff_thing._last_alive_time = current_time
                     pass
@@ -193,11 +193,9 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                              room_id=room_id,
                              staff_thing_info=device))
 
-        self._last_scan_time = get_current_time()
         return staff_thing_info_list
 
     # override
-
     def _receive_staff_message(self):
         for staff_thing in self._staff_thing_list:
             try:
@@ -237,39 +235,48 @@ class SoPHejhomeManagerThing(SoPManagerThing):
 
         if device_type == 'BruntPlug':
             hejhome_staff_thing = SoPBruntPlugHejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type == 'Curtain':
             hejhome_staff_thing = SoPCurtainHejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type == 'ZigbeeSwitch3':
             hejhome_staff_thing = SoPZigbeeSwitch3HejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type == 'IrDiy':
             hejhome_staff_thing = SoPIrDiyHejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type == 'IrAirconditioner':
             hejhome_staff_thing = SoPIrAirconditionerHejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type == 'LedStripRgbw2':
             hejhome_staff_thing = SoPLedStripRgbw2HejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type == 'IrTv':
             hejhome_staff_thing = SoPIrTvHejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type == 'SensorRadar':
             hejhome_staff_thing = SoPRadarPIRSensorHejhomeStaffThing(
-                name=name, service_list=[], alive_cycle=10, device_id=device_id, id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                id=device_id, home_name=home_name, home_id=home_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func,
                 pir_status_timeout=5)
         else:
-            SOPLOG_DEBUG('Unexpected function!!!', 'red')
+            SOPLOG_DEBUG(f'Unexpected device type!!! - {device_type}', 'red')
+            raise Exception('Unexpected device type!!!')
 
         hejhome_staff_thing.make_service_list()
         hejhome_staff_thing.set_function_result_queue(self._publish_queue)
@@ -298,7 +305,6 @@ class SoPHejhomeManagerThing(SoPManagerThing):
     # override
     def _handle_UNREGISTER_staff_message(self, staff_thing: SoPStaffThing) -> str:
         self._send_TM_UNREGISTER(staff_thing.get_name())
-        staff_thing._staff_registered = False
 
     # override
     def _handle_ALIVE_staff_message(self, staff_thing: SoPStaffThing) -> str:
@@ -376,9 +382,11 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                 method=RequestMethod.GET,
                 url=endpoint_get_device_state % device_id,
                 header=header)
+        else:
+            raise Exception('invalid action')
 
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -411,7 +419,7 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                     }
                 }),
                 header=header)
-        if action == HejHomeAction.ZBSW_ON:
+        elif action == HejHomeAction.ZBSW_ON:
             ret: requests.Response = API_request(
                 method=RequestMethod.POST,
                 url=endpoint_device_control % device_id,
@@ -481,32 +489,32 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                 }),
                 header=header)
         elif action == HejHomeAction.BRIGHTNESS:
-            if not isinstance(brightness, tuple):
-                raise Exception('brightness must be tuple type')
+            if not isinstance(brightness, int):
+                raise Exception('brightness must be int type')
             ret: requests.Response = API_request(
                 method=RequestMethod.POST,
                 url=endpoint_device_control % device_id,
                 body=dict_to_json_string({
                     "requirments": {
-                        "hsvColor": {
-                            "saturation": 100,
-                            "brightness": brightness
-                        }
+                        "brightness": brightness
                     }
                 }),
                 header=self._header)
         elif action == HejHomeAction.COLOR:
             if not isinstance(color, tuple):
                 raise Exception('color must be tuple type')
+
+            hue, saturation, brightness = rgb_to_hsv(*color)
             ret: requests.Response = API_request(
                 method=RequestMethod.POST,
                 url=endpoint_device_control % device_id,
+
+                # TODO: 색깔 조절이 생각하는대로 되지 않음. rgb 변환을 어떻게 하는지 확인이 필요
                 body=dict_to_json_string({
                     "requirments": {
                         "hsvColor": {
-                            # TODO: color tuning is required
-                            "hue": 200,
-                            "saturation": 100,
+                            "hue": hue,
+                            "saturation": saturation,
                             "brightness": brightness
                         }
                     }
@@ -517,8 +525,10 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                 method=RequestMethod.GET,
                 url=endpoint_get_device_state % device_id,
                 header=self._header)
+        else:
+            raise Exception('invalid action')
 
         if ret:
-            return ret
+            return True
         else:
             return False

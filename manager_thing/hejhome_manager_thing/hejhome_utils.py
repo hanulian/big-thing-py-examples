@@ -1,5 +1,6 @@
 from big_thing_py.utils.api_util import *
 from big_thing_py.utils.exception_util import *
+import colorsys
 
 
 class HejHomeAction(Enum):
@@ -14,6 +15,10 @@ class HejHomeAction(Enum):
     BRIGHTNESS = 'brightness'
     COLOR = 'color'
     STATUS = 'status'
+
+
+def rgb_to_hsv(r: int, g: int, b: int) -> Tuple[float, float, float]:
+    return colorsys.rgb_to_hsv(r, g, b)
 
 
 def verify_hejhome_request_result(result_list: list):

@@ -1,0 +1,9 @@
+{
+  "account_list": [
+    {
+      "name": "[ACCOUNT_NAME1]",
+      "endpoint_host": "https://api.smartthings.com/v1/",
+      "api_token": "[SMARTTHINES_API_KEY1]"
+    }
+  ]
+}

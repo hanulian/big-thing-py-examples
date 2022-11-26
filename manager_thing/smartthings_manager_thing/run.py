@@ -1,5 +1,4 @@
-from hejhome_manager_thing import *
-from hejhome_staff_thing import *
+from smartthings_manager_thing import *
 
 import argparse
 
@@ -7,7 +6,7 @@ import argparse
 def arg_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", '-n', action='store', type=str,
-                        required=False, default='hejhome_manager_thing', help="thing name")
+                        required=False, default='smartthings_manager_thing', help="thing name")
     parser.add_argument("--host", '-ip', action='store', type=str,
                         required=False, default='127.0.0.1', help="host name")
     parser.add_argument("--port", '-p', action='store', type=int,
@@ -30,7 +29,7 @@ def arg_parse():
     parser.add_argument("--scan_cycle", '-sc', action='store', type=int,
                         required=False, default=60, help="scan_cycle")
     parser.add_argument("--config", '-c', action='store', type=str,
-                        required=False, default='hejhome_conf.json', help="config file path")
+                        required=False, default='smartthings_conf.json', help="config file path")
     parser.add_argument("--config_select", '-s', action='store', type=str,
                         required=False, default='caplab', help="config select")
     parser.add_argument("--manager_mode", '-md', action='store', type=str,
@@ -41,11 +40,10 @@ def arg_parse():
 
 
 def generate_thing(args):
-    thing = SoPHejhomeManagerThing(name=args.name, ip=args.host, port=args.port,
-                                   endpoint_host=args.endpoint, alive_cycle=args.alive_cycle, service_list=[],
-                                   api_token=args.api_token, manager_mode=args.manager_mode,
-                                   scan_cycle=args.scan_cycle, conf_file_path=args.config, conf_select=args.config_select,
-                                   client_id=args.client_id, client_secret=args.client_secret)
+    thing = SoPSmartThingsManagerThing(name=args.name, ip=args.host, port=args.port,
+                                       endpoint_host=args.endpoint, alive_cycle=args.alive_cycle, service_list=[],
+                                       api_token=args.api_token, manager_mode=args.manager_mode,
+                                       scan_cycle=args.scan_cycle, conf_file_path=args.config, conf_select=args.config_select)
     return thing
 
 

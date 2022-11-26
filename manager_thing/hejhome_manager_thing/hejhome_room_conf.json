@@ -1,7 +1,7 @@
 {
   "account_list": [
     {
-      "name": "[ROOM_NAME1]",
+      "name": "[ACCOUNT_NAME1]",
       "endpoint_host": "https://goqual.io/openapi",
       "api_token": "[HEJHOME_API_KEY1]",
       "client_id": "[HEJHOME_CLIENT_ID]",
