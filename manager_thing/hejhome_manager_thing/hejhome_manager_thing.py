@@ -93,6 +93,10 @@ class SoPHejhomeManagerThing(SoPManagerThing):
 
     def AMQP_listening_thread_func(self, stop_event: Event):
         try:
+            res = API_request(f'{self._endpoint_host}/subscription?clientId={self._client_id}', RequestMethod.POST, header=self._header)
+            if not res:
+                raise Exception('Failed to subscribe')
+            
             while not stop_event.wait(self.MANAGER_THREAD_TIME_OUT):
                 credentials = pika.PlainCredentials(
                     self._client_id, self._client_secret)
