@@ -6,9 +6,10 @@ import argparse
 
 
 class SoPBasicSuperThing(SoPSuperThing):
+    def __init__(self, name: str, service_list: List[SoPService] = ..., alive_cycle: float = 60, is_super: bool = False, is_parallel: bool = True,
+                 ip: str = None, port: int = None, ssl_ca_path: str = None, ssl_enable: bool = False, log_name: str = None, log_enable: bool = True, log_mode: SoPPrintMode = SoPPrintMode.ABBR, append_mac_address: bool = True,
+                 refresh_cycle: float = 10):
 
-    def __init__(self, name: str = None, service_list: List[SoPService] = [], alive_cycle: float = 60, is_super: bool = False, is_parallel: bool = True,
-                 ip: str = None, port: int = None, ssl_ca_path: str = None, ssl_enable: bool = False, refresh_cycle: float = 10):
         tag_list = [SoPTag(name='super'),
                     SoPTag(name='basic'),
                     SoPTag(name='big_thing'),
@@ -20,79 +21,80 @@ class SoPBasicSuperThing(SoPSuperThing):
                                 type=SoPType.DOUBLE,
                                 bound=(0.0, 1000000.0))
 
-        # value_list = []
-        super_function_list = [SoPSuperFunction(func=self.super_func_execute_func_no_arg_SINGLE,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_func_execute_func_no_arg_ALL,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_func_execute_func_with_arg_SINGLE,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[int_arg],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_func_execute_func_with_arg_ALL,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[int_arg],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_func_execute_func_with_arg_and_delay_SINGLE,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[int_arg, delay_arg],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_func_execute_func_with_arg_and_delay_ALL,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[int_arg, delay_arg],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_func_get_value_current_time_SINGLE,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_func_get_value_current_time_ALL,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_multiple_req_line1,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[
-                                                    int_arg, delay_arg],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_multiple_req_line2,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[
-                                                    int_arg, delay_arg],
-                                                timeout=300 * 1000,
-                                                energy=110),
-                               SoPSuperFunction(func=self.super_multiple_req_line_with_fixed_argument,
-                                                return_type=SoPType.INTEGER,
-                                                tag_list=tag_list,
-                                                arg_list=[
-                                                    int_arg, delay_arg],
-                                                timeout=300 * 1000,
-                                                energy=110), ]
+        value_list = []
+        function_list = [SoPSuperFunction(func=self.super_func_execute_func_no_arg_SINGLE,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_func_execute_func_no_arg_ALL,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_func_execute_func_with_arg_SINGLE,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[int_arg],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_func_execute_func_with_arg_ALL,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[int_arg],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_func_execute_func_with_arg_and_delay_SINGLE,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[int_arg, delay_arg],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_func_execute_func_with_arg_and_delay_ALL,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[int_arg, delay_arg],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_func_get_value_current_time_SINGLE,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_func_get_value_current_time_ALL,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_multiple_req_line1,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[
+                                              int_arg, delay_arg],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_multiple_req_line2,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[
+                                              int_arg, delay_arg],
+                                          timeout=300,
+                                          energy=110),
+                         SoPSuperFunction(func=self.super_multiple_req_line_with_fixed_argument,
+                                          return_type=SoPType.INTEGER,
+                                          tag_list=tag_list,
+                                          arg_list=[
+                                              int_arg, delay_arg],
+                                          timeout=300,
+                                          energy=110), ]
 
-        super().__init__(name=name, service_list=service_list + super_function_list, alive_cycle=alive_cycle, is_super=True,
-                         is_parallel=is_parallel, ip=ip, port=port, ssl_ca_path=ssl_ca_path, ssl_enable=ssl_enable, refresh_cycle=refresh_cycle, log_name='./log/basic_feature_super_thing.log')
+        service_list = value_list + function_list
+        super().__init__(name, service_list, alive_cycle, is_super, is_parallel, ip, port,
+                         ssl_ca_path, ssl_enable, log_name, log_enable, log_mode, append_mac_address, refresh_cycle)
 
     def super_func_execute_func_no_arg_SINGLE(self, key) -> int:
         result_list = self.req(key, subfunction_name='func_no_arg', tag_list=['basic'],
@@ -286,6 +288,10 @@ def arg_parse():
                         required=False, help="middleware auto scan enable")
     parser.add_argument("--log", action='store_true',
                         required=False, help="log enable")
+    parser.add_argument("--log_mode", action='store',
+                        required=False, default=SoPPrintMode.FULL, help="log mode")
+    parser.add_argument("--append_mac", '-am', action='store_true',                         # store_true, store_false
+                        required=False, help="append mac address to thing name")
     args, unknown = parser.parse_known_args()
 
     return args
@@ -293,7 +299,7 @@ def arg_parse():
 
 def generate_thing(args):
     super_thing = SoPBasicSuperThing(name=args.name, ip=args.host, port=args.port,
-                                     alive_cycle=args.alive_cycle, refresh_cycle=args.refresh_cycle)
+                                     alive_cycle=args.alive_cycle, refresh_cycle=args.refresh_cycle, log_mode=SoPPrintMode.FULL)
     return super_thing
 
 

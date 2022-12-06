@@ -43,7 +43,8 @@ def capture() -> str:
         return os.path.abspath(file_name)
     else:
         return '실패'
-    
+
+
 def capture_with_filename(file_name: str) -> str:
     result = camera_capture(file_name, 0)
     if result:
@@ -74,14 +75,14 @@ def arg_parse():
 def generate_thing(args):
     tag_list = [SoPTag(name='camera')]
     function_list = [SoPFunction(func=capture,
-                                 exec_time=300 * 1000,
-                                 timeout=300 * 1000,
+                                 exec_time=300,
+                                 timeout=300,
                                  return_type=SoPType.STRING,
                                  tag_list=tag_list,
                                  arg_list=[]),
                      SoPFunction(func=capture_with_filename,
-                                 exec_time=300 * 1000,
-                                 timeout=300 * 1000,
+                                 exec_time=300,
+                                 timeout=300,
                                  return_type=SoPType.STRING,
                                  tag_list=tag_list,
                                  arg_list=[SoPArgument(name='image_name_arg',

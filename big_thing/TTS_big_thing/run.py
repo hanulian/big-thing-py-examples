@@ -75,8 +75,8 @@ def generate_thing(args):
                 SoPTag(name='tts'), ]
     function_list = [SoPFunction(func=speak,
                                  return_type=SoPType.BOOL,
-                                 exec_time=300 * 1000,
-                                 timeout=300 * 1000,
+                                 exec_time=300,
+                                 timeout=300,
                                  tag_list=tag_list,
                                  arg_list=[SoPArgument(name='function_speak_arg',
                                                        type=SoPType.STRING,
