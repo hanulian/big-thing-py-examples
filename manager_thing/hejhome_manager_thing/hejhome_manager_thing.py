@@ -121,10 +121,14 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                     json_body = json.loads(body)
                     print(f" [AMQP] Received {json_body}")
 
-                    devId = json_body['deviceDataReport']['devId']
-                    # dataId = json_body['deviceDataReport']['dataId']
-                    status = json_body['deviceDataReport']['status']
-                    pir_status = status[0]
+                    try:
+                        devId = json_body['deviceDataReport']['devId']
+                        # dataId = json_body['deviceDataReport']['dataId']
+                        status = json_body['deviceDataReport']['status']
+                        pir_status = status[0]
+                    except Exception as e:
+                        print_error(e)
+                        pir_status = dict(value=None)
 
                     for staff_thing in self._staff_thing_list:
                         if staff_thing._device_id == devId:
