@@ -42,7 +42,7 @@ class SoPHueStaffThing(SoPStaffThing):
         ret = self._device_function_service_func(
             self.idx, HueLightAction.ON)
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -51,7 +51,7 @@ class SoPHueStaffThing(SoPStaffThing):
         ret = self._device_function_service_func(
             self.idx, HueLightAction.OFF)
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -112,7 +112,7 @@ class SoPHueColorStaffThing(SoPHueStaffThing):
         ret = self._device_function_service_func(
             self.idx, HueLightAction.BRIGHTNESS, brightness)
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -121,7 +121,7 @@ class SoPHueColorStaffThing(SoPHueStaffThing):
         ret = self._device_function_service_func(
             self.idx, HueLightAction.BRIGHTNESS, (r, g, b))
         if ret:
-            return ret
+            return True
         else:
             return False
 

@@ -55,7 +55,7 @@ def generate_thing(args):
                                  energy=12),
                      SoPFunction(func=func_with_arg_and_delay,
                                  return_type=SoPType.INTEGER,
-                                 timeout=10 * 1000,
+                                 timeout=10,
                                  tag_list=tag_list + [delay_arg],
                                  arg_list=arg_list + [delay_arg],
                                  energy=56)]

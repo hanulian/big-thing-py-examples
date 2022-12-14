@@ -19,8 +19,7 @@ class SoPHejhomeManagerThing(SoPManagerThing):
     def __init__(self, name: str, service_list: List[SoPService], alive_cycle: float, is_super: bool = False, is_parallel: bool = True,
                  ip: str = None, port: int = None, ssl_ca_path: str = None, ssl_enable: bool = False, log_name: str = None, log_enable: bool = True, log_mode: SoPPrintMode = SoPPrintMode.ABBR, append_mac_address: bool = True,
                  manager_mode: SoPManagerMode = SoPManagerMode.SPLIT, scan_cycle=5,
-                 endpoint_host: str = '', api_token: str = '', conf_file_path: str = 'hejhome_conf.json', conf_select: str = '',
-                 client_id: str = '', client_secret: str = ''):
+                 conf_file_path: str = 'hejhome_conf.json', conf_select: str = ''):
         super().__init__(name, service_list, alive_cycle, is_super, is_parallel, ip, port, ssl_ca_path,
                          ssl_enable, log_name, log_enable, log_mode, append_mac_address, manager_mode, scan_cycle)
 
@@ -28,16 +27,19 @@ class SoPHejhomeManagerThing(SoPManagerThing):
         self._conf_file_path = conf_file_path
         self._conf_select = conf_select
 
-        if self._conf_file_path and '' not in [endpoint_host, api_token]:
-            self._endpoint_host = endpoint_host.rstrip('/')
-            self._api_token = api_token
-            self._client_id = client_id
-            self._client_secret = client_secret
-            self._header = self._make_header(self._api_token)
+        self._endpoint_host = ''
+        self._api_token = ''
+        self._client_id = ''
+        self._client_secret = ''
+        self._header = {}
+
+        if not self._conf_file_path:
+            raise Exception('Empty conf file path')
+        elif not os.path.exists(self._conf_file_path):
+            raise Exception('Invalid conf file path')
         else:
             self._load_config()
 
-        # TODO: self._endpoint_*** 작성
         self._endpoint_scan_homes = f'{self._endpoint_host}/homes'
         # %s: home_id
         self._endpoint_scan_rooms = f'{self._endpoint_host}/homes/%s/rooms'
@@ -93,6 +95,12 @@ class SoPHejhomeManagerThing(SoPManagerThing):
 
     def AMQP_listening_thread_func(self, stop_event: Event):
         try:
+            res = API_request(f'{self._endpoint_host}/subscription?clientId={self._client_id}',
+                              RequestMethod.POST,
+                              header=self._header)
+            if not res:
+                raise Exception('Failed to subscribe')
+
             while not stop_event.wait(self.MANAGER_THREAD_TIME_OUT):
                 credentials = pika.PlainCredentials(
                     self._client_id, self._client_secret)
@@ -128,11 +136,10 @@ class SoPHejhomeManagerThing(SoPManagerThing):
                 channel.basic_consume(queue=self._client_id,
                                       on_message_callback=callback, auto_ack=True)
 
-                # print('Waiting for AMQP messages')
                 try:
                     func_timeout(1, channel.start_consuming, args=())
                 except FunctionTimedOut:
-                    pass
+                    channel.stop_consuming()
         except Exception as e:
             stop_event.set()
             print_error(e)
@@ -337,18 +344,48 @@ class SoPHejhomeManagerThing(SoPManagerThing):
     ##############################################################################################################################
 
     def _load_config(self):
-        conf_file = json_file_read(self._conf_file_path)
+        conf_file: dict = json_file_read(self._conf_file_path)
 
         if conf_file:
-            SOPLOG_DEBUG(
-                f'Load [{self._conf_select}] config setting from config file [{self._conf_file_path}]', 'yellow')
+            config_list = conf_file['account_list']
+            if not self._conf_select or self._conf_select not in [config['name'] for config in config_list]:
+                if len(config_list) == 1:
+                    if self._conf_select:
+                        cprint(
+                            f'Selected config [{self._conf_select}] was not in conf file!!!', 'red')
+                    else:
+                        cprint(
+                            f'Config was not selected!!!', 'red')
+                    config = config_list[0]
+                    self._conf_select = config['name']
+                    cprint(
+                        f'Auto Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file', 'green')
+                    cprint(
+                        f'{config["name"]} : api token={config["api_token"]}', 'yellow')
+                    cprint(f'Start to run... sleep 3 sec', 'yellow')
+                    time.sleep(3)
+                else:
+                    user_input = cprint(
+                        f'- Please select config -', 'green')
+                    for i, config in enumerate(config_list):
+                        cprint(
+                            f'{i+1:>2}| [{config["name"]}] : api token={config["api_token"]}', 'yellow')
+                    user_input = input(f'Please select config : ')
+                    if user_input.isdigit():
+                        user_input = int(user_input) - 1
+                        self._conf_select = config_list[user_input]['name']
+                    else:
+                        self._conf_select = user_input
+                    cprint(
+                        f'Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file', 'green')
 
             self._endpoint_host, self._api_token, self._client_id, self._client_secret = self._extract_info_from_config(
                 conf_file, self._conf_select)
             self._header = self._make_header(self._api_token)
         elif self._endpoint_host == '' or self._endpoint_host == None:
-            SOPLOG_DEBUG('endpoint host is empty. exit program...', 'red')
-            raise
+            raise Exception('endpoint host is empty. exit program...')
+        else:
+            raise Exception('config file is empty. exit program...')
 
         self._endpoint_host = self._endpoint_host.rstrip('/')
 

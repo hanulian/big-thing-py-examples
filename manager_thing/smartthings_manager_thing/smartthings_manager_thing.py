@@ -17,7 +17,7 @@ class SoPSmartThingsManagerThing(SoPManagerThing):
     def __init__(self, name: str, service_list: List[SoPService], alive_cycle: float, is_super: bool = False, is_parallel: bool = True,
                  ip: str = None, port: int = None, ssl_ca_path: str = None, ssl_enable: bool = False, log_name: str = None, log_enable: bool = True, log_mode: SoPPrintMode = SoPPrintMode.ABBR, append_mac_address: bool = True,
                  manager_mode: SoPManagerMode = SoPManagerMode.SPLIT, scan_cycle=5,
-                 endpoint_host: str = '', api_token: str = '', conf_file_path: str = 'smartthings_conf.json', conf_select: str = '',):
+                 conf_file_path: str = '', conf_select: str = '',):
         super().__init__(name, service_list, alive_cycle, is_super, is_parallel, ip, port, ssl_ca_path,
                          ssl_enable, log_name, log_enable, log_mode, append_mac_address, manager_mode, scan_cycle)
 
@@ -25,10 +25,14 @@ class SoPSmartThingsManagerThing(SoPManagerThing):
         self._conf_file_path = conf_file_path
         self._conf_select = conf_select
 
-        if self._conf_file_path and '' not in [endpoint_host, api_token]:
-            self._endpoint_host = endpoint_host.rstrip('/')
-            self._api_token = api_token
-            self._header = self._make_header(self._api_token)
+        self._endpoint_host = ''
+        self._api_token = ''
+        self._header = {}
+
+        if not self._conf_file_path:
+            raise Exception('Empty conf file path')
+        elif not os.path.exists(self._conf_file_path):
+            raise Exception('Invalid conf file path')
         else:
             self._load_config()
 
@@ -176,7 +180,8 @@ class SoPSmartThingsManagerThing(SoPManagerThing):
         location_id = staff_thing_info['locationId']
         room_name = staff_thing_info['room_name']
         room_id = staff_thing_info['roomId']
-        name = staff_thing_info['name']
+        name = staff_thing_info['name'].replace(
+            ' ', '_').replace('(', '_').replace(')', '_')
         device_id = staff_thing_info['deviceId']
         label = staff_thing_info['label']
         type = staff_thing_info['type']
@@ -194,6 +199,11 @@ class SoPSmartThingsManagerThing(SoPManagerThing):
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
         elif device_type_name == 'Samsung OCF Robot Vacuum':
             smartthings_staff_thing = SoPRobotVacuumSmartThingsStaffThing(
+                name=name, service_list=[], alive_cycle=60, device_id=device_id,
+                label=label, location_name=location_name, location_id=location_id, room_name=room_name, room_id=room_id,
+                device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
+        elif type == 'BLE_D2D':
+            smartthings_staff_thing = SoPSmartTagSmartThingsStaffThing(
                 name=name, service_list=[], alive_cycle=60, device_id=device_id,
                 label=label, location_name=location_name, location_id=location_id, room_name=room_name, room_id=room_id,
                 device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
@@ -268,18 +278,48 @@ class SoPSmartThingsManagerThing(SoPManagerThing):
     ##############################################################################################################################
 
     def _load_config(self):
-        conf_file = json_file_read(self._conf_file_path)
+        conf_file: dict = json_file_read(self._conf_file_path)
 
         if conf_file:
-            SOPLOG_DEBUG(
-                f'Load [{self._conf_select}] config setting from config file [{self._conf_file_path}]', 'yellow')
+            config_list = conf_file['account_list']
+            if not self._conf_select or self._conf_select not in [config['name'] for config in config_list]:
+                if len(config_list) == 1:
+                    if self._conf_select:
+                        cprint(
+                            f'Selected config [{self._conf_select}] was not in conf file!!!', 'red')
+                    else:
+                        cprint(
+                            f'Config was not selected!!!', 'red')
+                    config = config_list[0]
+                    self._conf_select = config['name']
+                    cprint(
+                        f'Auto Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file', 'green')
+                    cprint(
+                        f'{config["name"]} : api token={config["api_token"]}', 'yellow')
+                    cprint(f'Start to run... sleep 3 sec', 'yellow')
+                    time.sleep(3)
+                else:
+                    user_input = cprint(
+                        f'- Please select config -', 'green')
+                    for i, config in enumerate(config_list):
+                        cprint(
+                            f'{i+1:>2}| [{config["name"]}] : api token={config["api_token"]}', 'yellow')
+                    user_input = input(f'Please select config : ')
+                    if user_input.isdigit():
+                        user_input = int(user_input) - 1
+                        self._conf_select = config_list[user_input]['name']
+                    else:
+                        self._conf_select = user_input
+                    cprint(
+                        f'Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file', 'green')
 
             self._endpoint_host, self._api_token = self._extract_info_from_config(
                 conf_file, self._conf_select)
             self._header = self._make_header(self._api_token)
         elif self._endpoint_host == '' or self._endpoint_host == None:
-            SOPLOG_DEBUG('endpoint host is empty. exit program...', 'red')
-            raise
+            raise Exception('endpoint host is empty. exit program...')
+        else:
+            raise Exception('config file is empty. exit program...')
 
         self._endpoint_host = self._endpoint_host.rstrip('/')
 

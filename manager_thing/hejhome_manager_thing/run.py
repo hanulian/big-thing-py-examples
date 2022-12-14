@@ -30,9 +30,9 @@ def arg_parse():
     parser.add_argument("--scan_cycle", '-sc', action='store', type=int,
                         required=False, default=60, help="scan_cycle")
     parser.add_argument("--config", '-c', action='store', type=str,
-                        required=False, default='hejhome_conf.json', help="config file path")
+                        required=False, default='', help="config file path")
     parser.add_argument("--config_select", '-s', action='store', type=str,
-                        required=False, default='caplab', help="config select")
+                        required=False, default='', help="config select")
     parser.add_argument("--manager_mode", '-md', action='store', type=str,
                         required=False, default=SoPManagerMode.SPLIT.value, help="manager_mode")
     arg_list, unknown = parser.parse_known_args()
@@ -42,10 +42,9 @@ def arg_parse():
 
 def generate_thing(args):
     thing = SoPHejhomeManagerThing(name=args.name, ip=args.host, port=args.port,
-                                   endpoint_host=args.endpoint, alive_cycle=args.alive_cycle, service_list=[],
-                                   api_token=args.api_token, manager_mode=args.manager_mode,
-                                   scan_cycle=args.scan_cycle, conf_file_path=args.config, conf_select=args.config_select,
-                                   client_id=args.client_id, client_secret=args.client_secret)
+                                   alive_cycle=args.alive_cycle, service_list=[],
+                                   manager_mode=args.manager_mode, scan_cycle=args.scan_cycle,
+                                   conf_file_path=args.config, conf_select=args.config_select)
     return thing
 
 

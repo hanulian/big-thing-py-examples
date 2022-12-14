@@ -1,5 +1,6 @@
 from big_thing_py.manager_thing import *
 from smartthings_utils import *
+from big_thing_py.utils.json_util import *
 
 
 class SoPSmartThingsStaffThing(SoPStaffThing):
@@ -28,7 +29,9 @@ class SoPSmartThingsStaffThing(SoPStaffThing):
     @SoPStaffThing.print_func_info
     def get_state(self) -> str:
         ret: requests.Response = self._device_function_service_func(
-            self.id, SmartThingsAction.STATUS)
+            self._device_id, SmartThingsAction.STATUS)
+        
+        return dict_to_json_string(ret)
 
     def add_tag_to_service(self, service_list: List[SoPService]):
         for staff_service in service_list:
@@ -199,6 +202,17 @@ class SoPAirPurifierSmartThingsStaffThing(SoPSmartThingsStaffThing):
                                         timeout=10000)]
         staff_function_list = []
         self.add_tag_to_service(staff_value_list + staff_function_list)
+
+
+class SoPSmartTagSmartThingsStaffThing(SoPSmartThingsStaffThing):
+    def __init__(self, name: str, service_list: List[SoPService], alive_cycle: float, is_super: bool = False, is_parallel: bool = True, device_id: str = None,
+                 label: str = '', location_name: str = '', location_id: str = '', room_name: str = '', room_id: str = '',
+                 device_function_service_func: Callable = None, device_value_service_func: Callable = None):
+        super().__init__(name, service_list, alive_cycle, is_super, is_parallel, device_id, label, location_name,
+                         location_id, room_name, room_id, device_function_service_func, device_value_service_func)
+
+    def make_service_list(self):
+        super().make_service_list()
 
 
 class SoPNonSmartThingsStaffThing(SoPSmartThingsStaffThing):
