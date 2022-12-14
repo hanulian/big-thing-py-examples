@@ -31,7 +31,11 @@ class SoPSmartThingsStaffThing(SoPStaffThing):
         ret: requests.Response = self._device_function_service_func(
             self._device_id, SmartThingsAction.STATUS)
         
-        return dict_to_json_string(ret)
+        if ret:
+            return dict_to_json_string(ret)
+        else:
+            SOPLOG_DEBUG(f'fail to get state of Smartthings device...', 'red')
+            raise
 
     def add_tag_to_service(self, service_list: List[SoPService]):
         for staff_service in service_list:
@@ -62,15 +66,18 @@ class SoPRobotVacuumSmartThingsStaffThing(SoPSmartThingsStaffThing):
     def is_on(self) -> bool:
         ret: requests.Response = self._device_value_service_func(
             self._device_id, SmartThingsAction.STATUS)
-        on_state = ret['state']['on']
-        return on_state
+        if ret:
+            on_state = ret['state']['on']
+            return on_state
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def on(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.ON)
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -79,7 +86,7 @@ class SoPRobotVacuumSmartThingsStaffThing(SoPSmartThingsStaffThing):
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.OFF)
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -113,15 +120,18 @@ class SoPTVSmartThingsStaffThing(SoPSmartThingsStaffThing):
     def is_on(self) -> bool:
         ret: requests.Response = self._device_value_service_func(
             self._device_id, SmartThingsAction.STATUS)
-        on_state = ret['state']['on']
-        return on_state
+        if ret:
+            on_state = ret['state']['on']
+            return on_state
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def on(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.ON)
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -164,15 +174,18 @@ class SoPAirPurifierSmartThingsStaffThing(SoPSmartThingsStaffThing):
     def is_on(self) -> bool:
         ret: requests.Response = self._device_value_service_func(
             self._device_id, SmartThingsAction.STATUS)
-        on_state = ret['state']['on']
-        return on_state
+        if ret:
+            on_state = ret['state']['on']
+            return on_state
+        else:
+            return False
 
     @SoPStaffThing.print_func_info
     def on(self) -> bool:
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.ON)
         if ret:
-            return ret
+            return True
         else:
             return False
 
@@ -181,7 +194,7 @@ class SoPAirPurifierSmartThingsStaffThing(SoPSmartThingsStaffThing):
         ret = self._device_function_service_func(
             self._device_id, SmartThingsAction.OFF)
         if ret:
-            return ret
+            return True
         else:
             return False
 
