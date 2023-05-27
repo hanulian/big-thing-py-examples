@@ -1,1 +1,2 @@
-opencv-python
+numpy
+opencv-python<=4.7
