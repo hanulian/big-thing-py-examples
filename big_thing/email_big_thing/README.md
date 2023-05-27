@@ -8,11 +8,11 @@
     1. https://myaccount.google.com/security 에 접속하여 **2단계 인증**을 클릭하여 **앱 비밀번호**를 설정 
     2. 기타를 선택하여 앱 비밀번호 생성
         
-        ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/3f7f751c-daa7-49e0-a88b-171e92b4fc6b/Untitled.png)
+        ![Untitled](img/gen_password1.png)
         
     3. 생성된 앱 비밀번호를 복사 또는 저장해두기
         
-        ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/68799485-7a0a-4f3d-9a4b-d420ed993162/Untitled.png)
+        ![Untitled](img/gen_password2.png)
         
     4. 생성된 앱 비밀번호를 [secret.py](http://secret.py/) 파일의 `EMAIL_PASSWORD_GMAIL`의 값으로 설정
     5. [run.py](http://run.py/)의 `SENDER_EMAIL`을 자신의 gmail 주소로 설정
