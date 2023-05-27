@@ -1,50 +1,68 @@
 #!/bin/python
 
 from big_thing_py.big_thing import *
+from secret import *
 
 
+from email.encoders import encode_base64
+from email.header import Header
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate
 import datetime
 import argparse
 import smtplib
 import ssl
 
-SENDER_EMAIL = 'sopiotlab@gmail.com'
 
-EMAIL_PASSWORD_GMAIL = 'oxrorhtwsuereitq'
-EMAIL_PASSWORD_NAVER = ''
-
-
-def send(receive_address: str = None, title: str = 'TEST EMAIL', text: str = None) -> bool:
-    SMTP_SSL_PORT = 465  # SSL connection
-    RECEIVER_EMAIL = receive_address
+def send(receiver_email: str = '', title: str = '', body: str = '') -> bool:
+    msg = MIMEMultipart()
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = receiver_email
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = Header(s=title, charset='utf-8')
+    body = MIMEText(body, _charset='utf-8')
+    msg.attach(body)
 
     if 'gmail' in SENDER_EMAIL:
-        SMTP_SERVER = "smtp.gmail.com"
-        SENDER_PASSWORD = EMAIL_PASSWORD_GMAIL
+        mailServer = smtplib.SMTP_SSL('smtp.gmail.com')
     elif 'naver' in SENDER_EMAIL:
-        SMTP_SERVER = "smtp.naver.com"
-        SENDER_PASSWORD = EMAIL_PASSWORD_NAVER
-    else:
-        SOPLOG_DEBUG('Not supported email service')
-        raise
+        mailServer = smtplib.SMTP_SSL('smtp.naver.com')
+    elif 'daum' in SENDER_EMAIL:
+        mailServer = smtplib.SMTP_SSL('smtp.daum.net')
 
-    context = ssl.create_default_context()
+    mailServer.login(SENDER_EMAIL, SENDER_PASSWORD)
+    mailServer.send_message(msg)
+    mailServer.quit()
 
-    with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_SSL_PORT, context=context) as server:
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        # msg = MIMEText(
-        #     f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} \n{text}')
-        msg = MIMEText(text)
-        msg['From'] = SENDER_EMAIL
-        msg['Subject'] = title
-        msg['To'] = RECEIVER_EMAIL
-        result = server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
 
-    if result is not {}:
-        return True
-    else:
-        return False
+def send_with_file(receiver_email: str = '', title: str = '', body: str = '', attachment_path: str = '') -> bool:
+    msg = MIMEMultipart()
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = receiver_email
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = Header(s=title, charset='utf-8')
+    body = MIMEText(body, _charset='utf-8')
+    msg.attach(body)
+
+    if attachment_path:
+        part = MIMEBase('application', "octet-stream")
+        part.set_payload(open(attachment_path, "rb").read())
+        encode_base64(part)
+        part.add_header('Content-Disposition', f'attachment; filename="{os.path.basename(attachment_path)}"')
+        msg.attach(part)
+
+    if 'gmail' in SENDER_EMAIL:
+        mailServer = smtplib.SMTP_SSL('smtp.gmail.com')
+    elif 'naver' in SENDER_EMAIL:
+        mailServer = smtplib.SMTP_SSL('smtp.naver.com')
+    elif 'daum' in SENDER_EMAIL:
+        mailServer = smtplib.SMTP_SSL('smtp.daum.net')
+
+    mailServer.login(SENDER_EMAIL, SENDER_PASSWORD)
+    mailServer.send_message(msg)
+    mailServer.quit()
 
 
 def arg_parse():
@@ -78,6 +96,21 @@ def generate_thing(args):
                                                        type=SoPType.STRING,
                                                        bound=(0, 10000)),
                                            SoPArgument(name='text',
+                                                       type=SoPType.STRING,
+                                                       bound=(0, 10000))]),
+                     SoPFunction(func=send_with_file,
+                                 return_type=SoPType.BOOL,
+                                 tag_list=tag_list,
+                                 arg_list=[SoPArgument(name='address',
+                                                       type=SoPType.STRING,
+                                                       bound=(0, 10000)),
+                                           SoPArgument(name='title',
+                                                       type=SoPType.STRING,
+                                                       bound=(0, 10000)),
+                                           SoPArgument(name='text',
+                                                       type=SoPType.STRING,
+                                                       bound=(0, 10000)),
+                                           SoPArgument(name='file',
                                                        type=SoPType.STRING,
                                                        bound=(0, 10000))])]
     value_list = []

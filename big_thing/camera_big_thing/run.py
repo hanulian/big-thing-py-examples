@@ -96,6 +96,9 @@ def generate_thing(args):
 
 
 if __name__ == '__main__':
+    # for MacOS camera permission bypass
+    os.environ["OPENCV_AVFOUNDATION_SKIP_AUTH"] = "1"
+
     args = arg_parse()
     thing = generate_thing(args)
     thing.setup(avahi_enable=args.auto_scan)
