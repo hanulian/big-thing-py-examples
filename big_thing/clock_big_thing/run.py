@@ -20,6 +20,21 @@ def current_time() -> str:
     return f'{now.hour:0>2}:{now.minute:0>2}:{now.second:0>2}'
 
 
+def current_hour() -> int:
+    now = datetime.datetime.now()
+    return now.hour
+
+
+def current_minute() -> int:
+    now = datetime.datetime.now()
+    return now.minute
+
+
+def current_second() -> int:
+    now = datetime.datetime.now()
+    return now.second
+
+
 def current_year() -> int:
     now = datetime.datetime.now()
     return now.year
@@ -92,6 +107,24 @@ def generate_thing(args):
                            type=SoPType.STRING,
                            bound=(0, 20),
                            cycle=1,
+                           tag_list=tag_list),
+                  SoPValue(name='hour',
+                           func=current_hour,
+                           type=SoPType.STRING,
+                           bound=(0, 9999),
+                           cycle=1,
+                           tag_list=tag_list),
+                  SoPValue(name='minute',
+                           func=current_minute,
+                           type=SoPType.STRING,
+                           bound=(0, 9999),
+                           cycle=1,
+                           tag_list=tag_list),
+                  SoPValue(name='second',
+                           func=current_second,
+                           type=SoPType.STRING,
+                           bound=(0, 9999),
+                           cycle=0.1,
                            tag_list=tag_list),
                   SoPValue(name='year',
                            func=current_year,
