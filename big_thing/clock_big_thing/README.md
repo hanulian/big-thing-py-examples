@@ -2,6 +2,8 @@
 
 시간 서비스를 제공하는 Thing 예제
 
+*24시간 체계를 사용*
+
 # 의존성
 
 ```bash
@@ -12,7 +14,7 @@ pip install -r requirements.txt
 
 ```bash
 cd big_thing/clock_big_thing
-python run.py [options]
+python run.py
 ```
 
 # 옵션
@@ -25,7 +27,7 @@ python run.py [options]
     
     Thing의 ip 주소
     
-- `-p, --port | default=1883`
+- `-p, --port | default=11083`
     
     Thing의 port 번호
     
@@ -64,6 +66,18 @@ python run.py [options]
     현재 시간을 제공하는 서비스
     
     - format: `hour/min/sec`
+- `current_hour -> int`
+    
+    현재 시를 제공하는 서비스
+    
+- `current_minute -> int`
+    
+    현재 분을 제공하는 서비스
+    
+- `current_second -> int`
+    
+    현재 초를 제공하는 서비스
+    
 - `current_year -> int`
     
     현재 년도를 제공하는 서비스
@@ -80,10 +94,12 @@ python run.py [options]
     
     현재 요일을 제공하는 서비스
     
-    - Monday
-    - Tuesday
-    - Wednesday
-    - Thursday
-    - Friday
-    - Saturday
-    - Sunday
+    다음 값 중 하나를 가진다
+    
+    - “Monday”
+    - “Tuesday”
+    - “Wednesday”
+    - “Thursday”
+    - “Friday”
+    - “Saturday”
+    - “Sunday”
