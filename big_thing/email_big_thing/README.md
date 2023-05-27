@@ -1,12 +1,29 @@
+# 이메일 Thing
+
 # 설명
 
 이메일 전송 기능을 제공하는 Thing 예제
+
+# 의존성
+
+- gmail
+    1. https://myaccount.google.com/security 에 접속하여 **2단계 인증**을 클릭하여 **앱 비밀번호**를 설정 
+    2. 기타를 선택하여 앱 비밀번호 생성
+        
+        ![Untitled](img/gen_password1.png)
+        
+    3. 생성된 앱 비밀번호를 복사 또는 저장해두기
+        
+        ![Untitled](img/gen_password2.png)
+        
+    4. 생성된 앱 비밀번호를 [secret.py](http://secret.py/) 파일의 `EMAIL_PASSWORD_GMAIL`의 값으로 설정
+    5. [run.py](http://run.py/)의 `SENDER_EMAIL`을 자신의 gmail 주소로 설정
 
 # 실행
 
 ```bash
 cd big_thing/email_big_thing
-python run.py [options]
+python run.py
 ```
 
 # 옵션
@@ -19,7 +36,7 @@ python run.py [options]
     
     Thing의 ip 주소
     
-- `-p, --port | default=1883`
+- `-p, --port | default=11083`
     
     Thing의 port 번호
     
@@ -40,9 +57,13 @@ python run.py [options]
 
 ## Function Services
 
-- `send(receive_address:str, title:str, text: str) -> bool`
+- `send(receive_address:str, title:str, text: str, attachment_path: str) -> bool`
     
     `title`의 제목을 가지고 `text`입 의 본문을 가지는 이메일을 `receive_address`로 전송하는 서비스. 
+    
+- `send_with_file(receive_address:str, title:str, text: str, attachment_path: str) -> bool`
+    
+    `send`의 서비스의 기능에 첨부파일 첨부기능을 추가한 서비스.
     
 
 ## Value Services
