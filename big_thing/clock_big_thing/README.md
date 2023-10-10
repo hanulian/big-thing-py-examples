@@ -1,8 +1,6 @@
 # 설명
 
-시간 서비스를 제공하는 Thing 예제
-
-*24시간 체계를 사용*
+시간 서비스를 제공하는 Thing 예제.
 
 # 의존성
 
@@ -20,29 +18,28 @@ python run.py
 # 옵션
 
 - `-n, --name | default = None`
-    
-    Thing의 이름. 이 이름은 Thing을 구분하기 위한 ID이기도 하다 
-    
+
+  Thing의 이름. 이 이름은 Thing을 구분하기 위한 ID이기도 하다.
+
 - `-ip --host | default='127.0.0.1'`
-    
-    Thing의 ip 주소
-    
-- `-p, --port | default=11083`
-    
-    Thing의 port 번호
-    
+
+  Thing의 ip 주소.
+
+- `-p, --port | default=1883`
+
+  Thing의 port 번호.
+
 - `-ac, --alive_cycle | default=60`
-    
-    Thing의 alive 패킷 전송 주기. alive 패킷을 통해 Middleware가 Thing의 활성화 여부를 파악한다. 
-    
+
+  Thing의 alive 패킷 전송 주기. alive 패킷을 통해 Middleware가 Thing의 활성화 여부를 파악한다.
+
 - `-as, --auto_scan | default=True`
-    
-    Middleware 자동스캔 기능 활성화 여부.
-    
+
+  Middleware 자동스캔 기능 활성화 여부.
+
 - `--log | default=True`
-    
-    Thing의 log기능의 활성화 여부. 
-    
+
+  Thing의 log기능의 활성화 여부.
 
 # Services
 
@@ -53,53 +50,41 @@ python run.py
 ## Value Services
 
 - `current_unix_time -> float`
-    
-    현재 유닉스 시간을 제공하는 서비스
-    
+
+  현재 유닉스 시간을 제공하는 서비스.
+
 - `current_datetime -> str`
-    
-    현재 날짜을 제공하는 서비스
-    
-    - format: `year/month/day`
+
+  현재 날짜을 제공하는 서비스.
+
+  - format: `year/month/day`
+
 - `current_time -> str`
-    
-    현재 시간을 제공하는 서비스
-    
-    - format: `hour/min/sec`
-- `current_hour -> int`
-    
-    현재 시를 제공하는 서비스
-    
-- `current_minute -> int`
-    
-    현재 분을 제공하는 서비스
-    
-- `current_second -> int`
-    
-    현재 초를 제공하는 서비스
-    
+
+  현재 시간을 제공하는 서비스.
+
+  - format: `hour/min/sec`
+
 - `current_year -> int`
-    
-    현재 년도를 제공하는 서비스
-    
+
+  현재 년도를 제공하는 서비스.
+
 - `current_month -> int`
-    
-    현재 월을 제공하는 서비스
-    
+
+  현재 월을 제공하는 서비스.
+
 - `current_day -> int`
-    
-    현재 일을 제공하는 서비스
-    
+
+  현재 일을 제공하는 서비스.
+
 - `current_weekday -> str`
-    
-    현재 요일을 제공하는 서비스
-    
-    다음 값 중 하나를 가진다
-    
-    - “Monday”
-    - “Tuesday”
-    - “Wednesday”
-    - “Thursday”
-    - “Friday”
-    - “Saturday”
-    - “Sunday”
+
+  현재 요일을 제공하는 서비스.
+
+  - Monday
+  - Tuesday
+  - Wednesday
+  - Thursday
+  - Friday
+  - Saturday
+  - Sunday

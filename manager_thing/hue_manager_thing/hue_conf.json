@@ -1,9 +1,9 @@
 {
   "room_list": [
     {
-      "name": "[ROOM_NAME1]",
-      "endpoint_host": "http://[HUE_BRIDGE_HOST1]/api/",
-      "api_token": "[HUE_API_KEY1]"
+      "name": "[ROOM_NAME]",
+      "endpoint_host": "http://[HUE_BRIDGE_IP]/api/",
+      "api_token": "[API_KEY]"
     }
   ]
 }

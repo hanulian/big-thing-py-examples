@@ -12,35 +12,23 @@ pip install -r requirements.txt
 
 ```bash
 cd big_thing/sensor_box_big_thing
-python run.py [options]
+python run.py
 ```
 
 # 옵션
 
 - `-n, --name | default = None`
-    
-    Thing의 이름. 이 이름은 Thing을 구분하기위한 ID이기도 하다 
-    
+  Thing의 이름. 이 이름은 Thing을 구분하기위한 ID이기도 하다
 - `-ip --host | default='127.0.0.1'`
-    
-    Thing의 ip 주소
-    
+  Thing의 ip 주소
 - `-p, --port | default=1883`
-    
-    Thing의 port 번호
-    
+  Thing의 port 번호
 - `-ac, --alive_cycle | default=60`
-    
-    Thing의 alive 패킷 전송 주기. alive 패킷을 통해 Middleware가 Thing의 활성화 여부를 파악한다. 
-    
+  Thing의 alive 패킷 전송 주기. alive 패킷을 통해 Middleware가 Thing의 활성화 여부를 파악한다.
 - `-as, --auto_scan | default=True`
-    
-    Middleware 자동스캔 기능 활성화 여부.
-    
+  Middleware 자동스캔 기능 활성화 여부.
 - `--log | default=True`
-    
-    Thing의 log기능의 활성화 여부. 
-    
+  Thing의 log기능의 활성화 여부.
 
 # Services
 
@@ -51,33 +39,18 @@ python run.py [options]
 ## Value Services
 
 - `temp -> float`
-    
-    온도값을 제공하는 서비스
-    
+  온도값을 제공하는 서비스
 - `humid -> float`
-    
-    습도값을 제공하는 서비스
-    
+  습도값을 제공하는 서비스
 - `pressure -> float`
-    
-    기압값을 제공하는 서비
-    
+  기압값을 제공하는 서비
 - `CO2 -> int`
-    
-    이산화탄소 농도값을 제공하는 서비스
-    
+  이산화탄소 농도값을 제공하는 서비스
 - `brightness -> int`
-    
-    광량값을 제공하는 서비스
-    
+  광량값을 제공하는 서비스
 - `sound -> int`
-    
-    소리크기값을 제공하는 서비스
-    
+  소리크기값을 제공하는 서비스
 - `dust -> float`
-    
-    미세먼지값을 제공하는 서비스
-    
+  미세먼지값을 제공하는 서비스
 - `VOC -> float`
-    
-    유해가스 농도값을 제공하는 서비스
+  유해가스 농도값을 제공하는 서비스

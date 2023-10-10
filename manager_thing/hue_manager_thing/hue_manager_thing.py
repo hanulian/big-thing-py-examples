@@ -1,10 +1,9 @@
-from big_thing_py.manager_thing import *
+from big_thing_py.poll_manager_thing import *
 from hue_staff_thing import *
 from hue_utils import *
 
 
-class SoPHueManagerThing(SoPManagerThing):
-
+class MXHueManagerThing(MXPollManagerThing):
     API_HEADER_TEMPLATE = {
         "Authorization": "Bearer ",
         "Content-Type": "application/json;charset-UTF-8"
@@ -14,13 +13,44 @@ class SoPHueManagerThing(SoPManagerThing):
         # "Connection": "close",
     }
 
-    def __init__(self, name: str, service_list: List[SoPService], alive_cycle: float, is_super: bool = False, is_parallel: bool = True,
-                 ip: str = None, port: int = None, ssl_ca_path: str = None, ssl_enable: bool = False, log_name: str = None, log_enable: bool = True, log_mode: SoPPrintMode = SoPPrintMode.ABBR, append_mac_address: bool = True, manager_mode: SoPManagerMode = SoPManagerMode.SPLIT, scan_cycle=5,
-                 conf_file_path: str = '', conf_select: str = ''):
-        super().__init__(name, service_list, alive_cycle, is_super, is_parallel, ip, port, ssl_ca_path,
-                         ssl_enable, log_name, log_enable, log_mode, append_mac_address, manager_mode, scan_cycle)
+    def __init__(
+        self,
+        name: str,
+        service_list: List[MXService],
+        alive_cycle: float,
+        is_super: bool = False,
+        is_parallel: bool = True,
+        ip: str = None,
+        port: int = None,
+        ssl_ca_path: str = None,
+        ssl_enable: bool = False,
+        log_name: str = None,
+        log_enable: bool = True,
+        log_mode: MXPrintMode = MXPrintMode.ABBR,
+        append_mac_address: bool = True,
+        manager_mode: MXManagerMode = MXManagerMode.SPLIT,
+        scan_cycle=5,
+        conf_file_path: str = '',
+        conf_select: str = '',
+    ):
+        super().__init__(
+            name,
+            service_list,
+            alive_cycle,
+            is_super,
+            is_parallel,
+            ip,
+            port,
+            ssl_ca_path,
+            ssl_enable,
+            log_name,
+            log_enable,
+            log_mode,
+            append_mac_address,
+            manager_mode,
+            scan_cycle,
+        )
 
-        self._staff_thing_table: List[SoPHueStaffThing] = []
         self._conf_file_path = conf_file_path
         self._conf_select = conf_select
 
@@ -36,16 +66,12 @@ class SoPHueManagerThing(SoPManagerThing):
             self._load_config()
 
         self._endpoint_scan_light = f'{self._endpoint_host}/{self._api_token}/lights'
-        # %s: light_id
         self._endpoint_get_light = f'{self._endpoint_host}/{self._api_token}/lights/%s'
-        # %s: light_id
         self._endpoint_execute_light = f'{self._endpoint_host}/{self._api_token}/lights/%s/state'
-        self._endpoint_scan_sensor = f'{self._endpoint_host}/{self._api_token}/sensors'
-        # %s: sensor_id
-        self._endpoint_get_sensor = f'{self._endpoint_host}/{self._api_token}/sensors/%s'
 
-    def setup(self, avahi_enable=True):
-        return super().setup(avahi_enable=avahi_enable)
+        self._endpoint_scan_sensor = f'{self._endpoint_host}/{self._api_token}/sensors'
+        self._endpoint_get_sensor = f'{self._endpoint_host}/{self._api_token}/sensors/%s'
+        self._endpoint_execute_sensor = f'{self._endpoint_host}/{self._api_token}/sensors/%s/state'
 
     # ===========================================================================================
     #  _    _                             _    __                      _    _
@@ -56,31 +82,7 @@ class SoPHueManagerThing(SoPManagerThing):
     #  \__||_| |_||_|    \___| \__,_| \__,_| |_|   \__,_||_| |_| \___| \__||_| \___/ |_| |_||___/
     # ===========================================================================================
 
-    # override
-    def _alive_thread_func(self, stop_event: Event) -> Union[bool, None]:
-        try:
-            while not stop_event.wait(THREAD_TIME_OUT):
-                if self._manager_mode == SoPManagerMode.JOIN:
-                    current_time = get_current_time()
-                    if current_time - self._last_alive_time > self._alive_cycle:
-                        for staff_thing in self._staff_thing_list:
-                            self._send_TM_ALIVE(
-                                thing_name=staff_thing.get_name())
-                            staff_thing._last_alive_time = current_time
-                elif self._manager_mode == SoPManagerMode.SPLIT:
-                    # api 방식일 때에는 staff thing이 계속 staff_thing_list에 남아있는 것으로 alive를 처리한다.
-                    current_time = get_current_time()
-                    for staff_thing in self._staff_thing_list:
-                        if current_time - staff_thing._last_alive_time > staff_thing._alive_cycle:
-                            self._send_TM_ALIVE(thing_name=staff_thing._name)
-                            staff_thing._last_alive_time = current_time
-                    pass
-                else:
-                    raise Exception('Invalid Manager Mode')
-        except Exception as e:
-            stop_event.set()
-            print_error(e)
-            return False
+    # nothing to add...
 
     # ====================================================================================================================
     #  _                        _  _        ___  ___ _____  _____  _____
@@ -95,6 +97,116 @@ class SoPHueManagerThing(SoPManagerThing):
 
     # nothing to add...
 
+    # ===========================
+    #            _____   _____
+    #     /\    |  __ \ |_   _|
+    #    /  \   | |__) |  | |
+    #   / /\ \  |  ___/   | |
+    #  / ____ \ | |      _| |_
+    # /_/    \_\|_|     |_____|
+    # ===========================
+
+    def _scan_staff_thing(self, timeout: float = 10) -> Union[List[dict], bool]:
+        staff_thing_info_list: dict = API_request(
+            self._endpoint_scan_light, RequestMethod.GET, self._header, verify=False, timeout=timeout
+        )
+        staff_sensor_thing_info_list: dict = API_request(
+            self._endpoint_scan_sensor, RequestMethod.GET, self._header, verify=False, timeout=timeout
+        )
+
+        if verify_hue_request_result(staff_thing_info_list) or verify_hue_request_result(staff_sensor_thing_info_list):
+            staff_thing_info_list = [
+                dict(idx=idx, info=staff_thing_info) for idx, staff_thing_info in staff_thing_info_list.items()
+            ]
+            staff_sensor_thing_info_list = [
+                dict(idx=idx, info=staff_thing_info) for idx, staff_thing_info in staff_sensor_thing_info_list.items()
+            ]
+            return staff_thing_info_list + staff_sensor_thing_info_list
+        else:
+            return False
+
+    def _create_staff(self, staff_thing_info) -> Union[MXHueStaffThing, None]:
+        trans = str.maketrans({' ': '_', '(': '_', ')': '_', '-': '_'})
+
+        idx = int(staff_thing_info['idx'])
+        staff_thing_info: dict = staff_thing_info['info']
+
+        # type = staff_thing_info['type']
+        name: str = staff_thing_info['name'].translate(trans)
+        # modelid = staff_thing_info['modelid']
+        # manufacturername = staff_thing_info['manufacturername']
+        productname = staff_thing_info.get('productname', None)
+        uniqueid = staff_thing_info.get('uniqueid', self.generate_staff_thing_id())
+        # swversion = staff_thing_info['swversion']
+        # swconfigid = staff_thing_info['swconfigid']
+        # productid = staff_thing_info['productid']
+
+        # state: dict = staff_thing_info['state']
+        # swupdate: dict = staff_thing_info['swupdate']
+        # capabilities: dict = staff_thing_info['capabilities']
+        # config: dict = staff_thing_info['config']
+
+        ALIVE_CYCLE = 10
+        if productname == 'Hue color lamp':
+            hue_staff_thing = MXHueColorLampStaffThing(
+                name=name,
+                service_list=[],
+                alive_cycle=ALIVE_CYCLE,
+                staff_thing_id=uniqueid,
+                idx=idx,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif productname == 'Hue go':
+            hue_staff_thing = MXHueGoStaffThing(
+                name=name,
+                service_list=[],
+                alive_cycle=ALIVE_CYCLE,
+                staff_thing_id=uniqueid,
+                idx=idx,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif productname == 'Hue lightstrip plus':
+            hue_staff_thing = MXHueLightStripPlusStaffThing(
+                name=name,
+                service_list=[],
+                alive_cycle=ALIVE_CYCLE,
+                staff_thing_id=uniqueid,
+                idx=idx,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif productname == 'Hue motion sensor':
+            hue_staff_thing = MXHueMotionSensorStaffThing(
+                name=name,
+                service_list=[],
+                alive_cycle=ALIVE_CYCLE,
+                staff_thing_id=uniqueid,
+                idx=idx,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif productname == 'Hue tap switch':
+            MXLOG_DEBUG(
+                f'Not supported product!!! name: {staff_thing_info["name"]}, type: {staff_thing_info["type"]}',
+                'yellow',
+            )
+        else:
+            # FIXME: Add implement for other device type
+            MXLOG_DEBUG(
+                f'Not supported product!!! name: {staff_thing_info["name"]}, type: {staff_thing_info["type"]}',
+                'yellow',
+            )
+            return None
+
+        hue_staff_thing.make_service_list()
+        hue_staff_thing.set_function_result_queue(self._publish_queue)
+        for staff_service in hue_staff_thing.get_value_list() + hue_staff_thing.get_function_list():
+            staff_service.add_tag(MXTag(self._conf_select))
+
+        return hue_staff_thing
+
     # ========================
     #         _    _  _
     #        | |  (_)| |
@@ -104,135 +216,6 @@ class SoPHueManagerThing(SoPManagerThing):
     #  \__,_| \__||_||_||___/
     # ========================
 
-    # override
-    def _scan_staff_thing(self, timeout: float = 5) -> List[dict]:
-        staff_thing_info_list: dict = API_request(
-            self._endpoint_scan_light, RequestMethod.GET, self._header)
-        staff_thing_info_list: dict = API_request(
-            self._endpoint_scan_light, RequestMethod.GET, self._header)
-        if verify_hue_request_result(staff_thing_info_list):
-            staff_thing_info_list = [dict(idx=idx, staff_thing_info=staff_thing_info)
-                                     for idx, staff_thing_info in staff_thing_info_list.items()]
-            return staff_thing_info_list
-        else:
-            return False
-
-    # override
-    def _receive_staff_message(self):
-        for staff_thing in self._staff_thing_list:
-            try:
-                staff_msg = staff_thing._receive_queue.get(
-                    timeout=THREAD_TIME_OUT)
-                return staff_msg
-            except Empty:
-                pass
-
-    # override
-    def _publish_staff_message(self, staff_msg) -> None:
-        pass
-
-    # override
-    def _parse_staff_message(self, staff_msg) -> Tuple[SoPProtocolType, str, str]:
-        protocol = staff_msg['protocol']
-        device_id = staff_msg['device_id']
-        payload = staff_msg['payload']
-
-        return protocol, device_id, payload
-
-    # override
-
-    def _create_staff(self, staff_thing_info) -> SoPHueStaffThing:
-        idx = int(staff_thing_info['idx'])
-        staff_thing_info = staff_thing_info['staff_thing_info']
-        name = staff_thing_info['name'].split(
-            '(')[0].rstrip().replace(' ', '_')
-        # name: str = staff_thing_info['name']
-        uniqueid = staff_thing_info['uniqueid']
-        type = staff_thing_info['type']
-        productname = staff_thing_info['productname']
-
-        if productname == 'Hue color lamp':
-            hue_staff_thing = SoPHueColorLampStaffThing(
-                name=name, service_list=[], alive_cycle=60, device_id=uniqueid,
-                idx=idx, uniqueid=uniqueid,
-                device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
-        elif productname == 'Hue go':
-            hue_staff_thing = SoPHueGoStaffThing(
-                name=name, service_list=[], alive_cycle=60, device_id=uniqueid,
-                idx=idx, uniqueid=uniqueid,
-                device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
-        elif productname == 'Hue lightstrip plus':
-            hue_staff_thing = SoPHueLightStripPlusStaffThing(
-                name=name, service_list=[], alive_cycle=60, device_id=uniqueid,
-                idx=idx, uniqueid=uniqueid,
-                device_function_service_func=self._device_function_service_func, device_value_service_func=self._device_value_service_func)
-        elif productname == 'Hue motion sensor':
-            pass
-        elif productname == 'Hue tap switch':
-            pass
-        else:
-            SOPLOG_DEBUG(
-                f'Unexpected device type!!! - {productname}', 'red')
-            raise Exception('Unexpected device type!!!')
-
-        hue_staff_thing.make_service_list()
-        hue_staff_thing.set_function_result_queue(self._publish_queue)
-        for staff_service in hue_staff_thing.get_value_list() + hue_staff_thing.get_function_list():
-            staff_service.add_tag(SoPTag(self._conf_select))
-
-        return hue_staff_thing
-
-    # override
-    def _connect_staff_thing(self, staff_thing: SoPStaffThing) -> bool:
-        # api 방식에서는 api 요청 결과에 staff thing이 포함되어 있으면 연결.
-        staff_thing._receive_queue.put(dict(device_id=staff_thing.get_device_id(),
-                                            protocol=SoPProtocolType.Base.TM_REGISTER,
-                                            payload=staff_thing.dump()))
-        staff_thing._is_connected = True
-
-    # override
-    def _disconnect_staff_thing(self, staff_thing: SoPStaffThing) -> bool:
-        # api 방식에서는 api 요청 결과에 staff thing이 포함되어 있지 않으면 연결해제.
-        staff_thing._is_connected = False
-
-    # override
-    def _handle_REGISTER_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> Tuple[str, dict]:
-        return staff_thing.get_name(), payload
-
-    # override
-    def _handle_UNREGISTER_staff_message(self, staff_thing: SoPStaffThing) -> str:
-        self._send_TM_UNREGISTER(staff_thing.get_name())
-
-    # override
-    def _handle_ALIVE_staff_message(self, staff_thing: SoPStaffThing) -> str:
-        pass
-
-    # override
-    def _handle_VALUE_PUBLISH_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> Tuple[str, str, dict]:
-        pass
-
-    # override
-    def _handle_RESULT_EXECUTE_staff_message(self, staff_thing: SoPStaffThing, payload: str) -> str:
-        # API 방식의 staff thing으로 부터는 result 메시지를 받지 않는다.
-        pass
-
-    # override
-    def _send_RESULT_REGISTER_staff_message(self, staff_thing: SoPStaffThing, payload: dict) -> str:
-        # API 방식의 staff thing에게는 result 메시지를 보내지 않는다.
-        pass
-
-    # override
-    def _send_RESULT_UNREGISTER_staff_message(self, staff_thing: SoPStaffThing, payload: dict) -> str:
-        # API 방식의 staff thing에게는 result 메시지를 보내지 않는다.
-        pass
-
-    # override
-    def _send_EXECUTE_staff_message(self, staff_thing: SoPStaffThing, payload: dict) -> str:
-        # API 방식의 staff thing에게는 execute 메시지를 보내지 않는다. 대시 execute 동작을 하는 api 요청을 보낸다.
-        pass
-
-    ############################################################################################################################
-
     def _load_config(self):
         conf_file: dict = json_file_read(self._conf_file_path)
 
@@ -241,25 +224,24 @@ class SoPHueManagerThing(SoPManagerThing):
             if not self._conf_select or self._conf_select not in [config['name'] for config in config_list]:
                 if len(config_list) == 1:
                     if self._conf_select:
-                        cprint(
-                            f'Selected config [{self._conf_select}] was not in conf file!!!', 'red')
+                        cprint(f'Selected config [{self._conf_select}] was not in conf file!!!', 'red')
                     else:
-                        cprint(
-                            f'Config was not selected!!!', 'red')
+                        cprint(f'Config was not selected!!!', 'red')
                     config = config_list[0]
                     self._conf_select = config['name']
                     cprint(
-                        f'Auto Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file', 'green')
-                    cprint(
-                        f'{config["name"]} : api token={config["api_token"]}', 'yellow')
-                    cprint(f'Start to run... sleep 3 sec', 'yellow')
-                    time.sleep(3)
+                        f'Auto Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file',
+                        'green',
+                    )
+                    cprint(f'{config["name"]} : api token={config["api_token"]}', 'yellow')
+
+                    # FIXME: Uncomment this line
+                    # cprint(f'Start to run... sleep 3 sec', 'yellow')
+                    # time.sleep(3)
                 else:
-                    user_input = cprint(
-                        f'- Please select config -', 'green')
+                    user_input = cprint(f'- Please select config -', 'green')
                     for i, config in enumerate(config_list):
-                        cprint(
-                            f'{i+1:>2}| [{config["name"]}] : api token={config["api_token"]}', 'yellow')
+                        cprint(f'{i+1:>2}| [{config["name"]}] : api token={config["api_token"]}', 'yellow')
                     user_input = input(f'Please select config : ')
                     if user_input.isdigit():
                         user_input = int(user_input) - 1
@@ -267,10 +249,10 @@ class SoPHueManagerThing(SoPManagerThing):
                     else:
                         self._conf_select = user_input
                     cprint(
-                        f'Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file', 'green')
+                        f'Load [{self._conf_select}] config setting [{self._conf_file_path}] from config file', 'green'
+                    )
 
-            self._endpoint_host, self._api_token = self._extract_info_from_config(
-                conf_file, self._conf_select)
+            self._endpoint_host, self._api_token = self._extract_info_from_config(conf_file, self._conf_select)
             self._header = self._make_header(self._api_token)
         elif self._endpoint_host == '' or self._endpoint_host == None:
             raise Exception('endpoint host is empty. exit program...')
@@ -292,21 +274,87 @@ class SoPHueManagerThing(SoPManagerThing):
         return False
 
     def _make_header(self, api_token: str):
-        header = SoPHueManagerThing.API_HEADER_TEMPLATE
+        header = MXHueManagerThing.API_HEADER_TEMPLATE
         header['Authorization'] = header['Authorization'] + api_token
         return header
 
     ##############################################################################################################################
 
-    def _device_value_service_func(self, idx: int, action: HueLightAction) -> bool:
-        endpoint_get_light = self._endpoint_get_light
+    def _device_value_service_func(self, idx: int, device_type: MXHueDeviceType, action: MXHueAction) -> bool:
+        light_endpoint = self._endpoint_get_light
+        sensor_endpoint = self._endpoint_get_sensor
         header = self._header
 
-        if action == HueLightAction.STATUS:
-            ret: requests.Response = API_request(
-                method=RequestMethod.GET,
-                url=endpoint_get_light % idx,
-                header=header)
+        if action == MXHueAction.STATUS:
+            if device_type == MXHueDeviceType.LIGHT:
+                ret: requests.Response = API_request(
+                    method=RequestMethod.GET, url=light_endpoint % idx, header=header, verify=False
+                )
+            elif device_type == MXHueDeviceType.SENSOR:
+                ret: requests.Response = API_request(
+                    method=RequestMethod.GET, url=sensor_endpoint % idx, header=header, verify=False
+                )
+            return ret
+        elif action == MXHueAction.IS_ON:
+            if device_type == MXHueDeviceType.LIGHT:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.LIGHT, action=MXHueAction.STATUS
+                )
+                return ret['state']['on']
+            elif device_type == MXHueDeviceType.SENSOR:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.SENSOR, action=MXHueAction.STATUS
+                )
+                return ret['config']['on']
+        elif action == MXHueAction.GET_BRIGHTNESS:
+            if device_type == MXHueDeviceType.LIGHT:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.LIGHT, action=MXHueAction.STATUS
+                )
+                return ret['state']['bri']
+            elif device_type == MXHueDeviceType.SENSOR:
+                raise Exception('sensor does not have brightness')
+        elif action == MXHueAction.GET_COLOR:
+            if device_type == MXHueDeviceType.LIGHT:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.LIGHT, action=MXHueAction.STATUS
+                )
+                color = xy_to_rgb(*tuple(ret['state']['xy'] + [ret['state']['bri']]))
+                return color
+            elif device_type == MXHueDeviceType.SENSOR:
+                raise Exception('sensor does not have color')
+        elif action == MXHueAction.GET_DAYLIGHT:
+            if device_type == MXHueDeviceType.LIGHT:
+                raise Exception('light does not have daylight')
+            elif device_type == MXHueDeviceType.SENSOR:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.SENSOR, action=MXHueAction.STATUS
+                )
+                return ret['state']['presence']
+        elif action == MXHueAction.GET_MOTION:
+            if device_type == MXHueDeviceType.LIGHT:
+                raise Exception('light does not have motion')
+            elif device_type == MXHueDeviceType.SENSOR:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.SENSOR, action=MXHueAction.STATUS
+                )
+                return ret['state']['presence']
+        elif action == MXHueAction.GET_LIGHTLEVEL:
+            if device_type == MXHueDeviceType.LIGHT:
+                raise Exception('light does not have lightlevel')
+            elif device_type == MXHueDeviceType.SENSOR:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.SENSOR, action=MXHueAction.STATUS
+                )
+                return ret['state']['lightlevel']
+        elif action == MXHueAction.GET_TEMPERATURE:
+            if device_type == MXHueDeviceType.LIGHT:
+                raise Exception('light does not have temperature')
+            elif device_type == MXHueDeviceType.SENSOR:
+                ret: dict = self._device_value_service_func(
+                    idx=idx, device_type=MXHueDeviceType.SENSOR, action=MXHueAction.STATUS
+                )
+                return ret['state']['temperature']
         else:
             raise Exception('invalid action')
 
@@ -315,45 +363,66 @@ class SoPHueManagerThing(SoPManagerThing):
         else:
             return False
 
-    def _device_function_service_func(self, idx: int, action: HueLightAction, brightness: int = None, color: Tuple[int, int, int] = None) -> bool:
-        endpoint_execute = self._endpoint_execute_light
+    def _device_function_service_func(
+        self,
+        idx: int,
+        device_type: MXHueDeviceType,
+        action: MXHueAction,
+        brightness: int = None,
+        color: Tuple[int, int, int] = None,
+    ) -> bool:
+        light_endpoint = self._endpoint_execute_light
         header = self._header
 
-        if action == HueLightAction.ON:
-            ret: requests.Response = API_request(
-                method=RequestMethod.PUT,
-                url=endpoint_execute % idx,
-                body=dict_to_json_string({'on': True}),
-                header=header)
-        elif action == HueLightAction.OFF:
-            ret: requests.Response = API_request(
-                method=RequestMethod.PUT,
-                url=endpoint_execute % idx,
-                body=dict_to_json_string({'on': False}),
-                header=header)
-        elif action == HueLightAction.BRIGHTNESS:
-            if not isinstance(brightness, tuple):
-                raise Exception('brightness must be tuple type')
-            ret: requests.Response = API_request(
-                method=RequestMethod.PUT,
-                url=endpoint_execute % idx,
-                body=dict_to_json_string({'bri': brightness}),
-                header=self._header)
-        elif action == HueLightAction.COLOR:
-            if not isinstance(color, tuple):
-                raise Exception('color must be tuple type')
-            x, y = rgb_to_xy(*color)
-            ret: requests.Response = API_request(
-                method=RequestMethod.PUT,
-                url=endpoint_execute % idx,
-                body=dict_to_json_string({'xy': [x, y]}),
-                header=self._header)
-        elif action == HueLightAction.STATUS:
-            ret: requests.Response = API_request(
-                method=RequestMethod.PUT,
-                url=endpoint_execute % idx,
-                body=dict_to_json_string({'xy': [x, y]}),
-                header=self._header)
+        if action == MXHueAction.STATUS:
+            if device_type == MXHueDeviceType.LIGHT:
+                ret: requests.Response = API_request(
+                    method=RequestMethod.GET, url=light_endpoint % idx, header=header, verify=False
+                )
+            elif device_type == MXHueDeviceType.SENSOR:
+                raise Exception('sensor does not have status')
+            return ret['state']
+        elif action == MXHueAction.ON:
+            if device_type == MXHueDeviceType.LIGHT:
+                ret: requests.Response = API_request(
+                    method=RequestMethod.PUT,
+                    url=light_endpoint % idx,
+                    body=dict_to_json_string({'on': True}),
+                    header=header,
+                    verify=False,
+                )
+        elif action == MXHueAction.OFF:
+            if device_type == MXHueDeviceType.LIGHT:
+                ret: requests.Response = API_request(
+                    method=RequestMethod.PUT,
+                    url=light_endpoint % idx,
+                    body=dict_to_json_string({'on': False}),
+                    header=header,
+                    verify=False,
+                )
+        elif action == MXHueAction.SET_BRIGHTNESS:
+            if device_type == MXHueDeviceType.LIGHT:
+                if not isinstance(brightness, tuple):
+                    raise Exception('brightness must be tuple type')
+                ret: requests.Response = API_request(
+                    method=RequestMethod.PUT,
+                    url=light_endpoint % idx,
+                    body=dict_to_json_string({'bri': brightness}),
+                    header=header,
+                    verify=False,
+                )
+        elif action == MXHueAction.SET_COLOR:
+            if device_type == MXHueDeviceType.LIGHT:
+                if not isinstance(color, tuple):
+                    raise Exception('color must be tuple type')
+                x, y = rgb_to_xy(*color)
+                ret: requests.Response = API_request(
+                    method=RequestMethod.PUT,
+                    url=light_endpoint % idx,
+                    body=dict_to_json_string({'xy': [x, y]}),
+                    header=header,
+                    verify=False,
+                )
         else:
             raise Exception('invalid action')
 

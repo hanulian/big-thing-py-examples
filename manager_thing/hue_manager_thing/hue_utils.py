@@ -3,12 +3,30 @@ from big_thing_py.utils.exception_util import *
 import math
 
 
-class HueLightAction(Enum):
-    ON = 'on'
-    OFF = 'off'
-    BRIGHTNESS = 'brightness'
-    COLOR = 'color'
-    STATUS = 'status'
+class MXHueAction(Enum):
+    def _generate_next_value_(name: str, start, count, last_values):
+        return name.lower()
+
+    IS_ON = auto()
+    GET_BRIGHTNESS = auto()
+    GET_COLOR = auto()
+    GET_DAYLIGHT = auto()
+    GET_MOTION = auto()
+    GET_LIGHTLEVEL = auto()
+    GET_TEMPERATURE = auto()
+    ON = auto()
+    OFF = auto()
+    SET_BRIGHTNESS = auto()
+    SET_COLOR = auto()
+    STATUS = auto()
+
+
+class MXHueDeviceType(Enum):
+    def _generate_next_value_(name: str, start, count, last_values):
+        return name.lower()
+
+    LIGHT = auto()
+    SENSOR = auto()
 
 
 def enhance_color(normalized):
@@ -53,12 +71,9 @@ def xy_to_rgb(x, y, bri) -> List[float]:
     r = X * 1.612 - Y * 0.203 - Z * 0.302
     g = -X * 0.509 + Y * 1.412 + Z * 0.066
     b = X * 0.026 - Y * 0.072 + Z * 0.962
-    r = 12.92 * \
-        r if r <= 0.0031308 else (1.0 + 0.055) * pow(r, (1.0 / 2.4)) - 0.055
-    g = 12.92 * \
-        g if g <= 0.0031308 else (1.0 + 0.055) * pow(g, (1.0 / 2.4)) - 0.055
-    b = 12.92 * \
-        b if b <= 0.0031308 else (1.0 + 0.055) * pow(b, (1.0 / 2.4)) - 0.055
+    r = 12.92 * r if r <= 0.0031308 else (1.0 + 0.055) * pow(r, (1.0 / 2.4)) - 0.055
+    g = 12.92 * g if g <= 0.0031308 else (1.0 + 0.055) * pow(g, (1.0 / 2.4)) - 0.055
+    b = 12.92 * b if b <= 0.0031308 else (1.0 + 0.055) * pow(b, (1.0 / 2.4)) - 0.055
     maxValue = max(r, g, b)
     r /= maxValue
     g /= maxValue

@@ -4,17 +4,20 @@ import colorsys
 
 
 class HejHomeAction(Enum):
-    ON = 'on'
-    OFF = 'off'
-    ZBSW_ON = 'zbsw_on'
-    ZBSW_OFF = 'zbsw_off'
-    ZBSW_CONTROL = 'zbsw_control'
-    CURTAIN_OPEN = 'curtain_onen'
-    CURTAIN_CLOSE = 'curtain_close'
-    CURTAIN_CONTROL = 'curtain_control'
-    BRIGHTNESS = 'brightness'
-    COLOR = 'color'
-    STATUS = 'status'
+    def _generate_next_value_(name: str, start, count, last_values):
+        return name.lower()
+
+    ON = auto()
+    OFF = auto()
+    ZBSW_ON = auto()
+    ZBSW_OFF = auto()
+    ZBSW_CONTROL = auto()
+    CURTAIN_OPEN = auto()
+    CURTAIN_CLOSE = auto()
+    CURTAIN_CONTROL = auto()
+    BRIGHTNESS = auto()
+    COLOR = auto()
+    STATUS = auto()
 
 
 def rgb_to_hsv(r: int, g: int, b: int) -> Tuple[float, float, float]:

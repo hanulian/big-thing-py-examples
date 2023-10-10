@@ -1,0 +1,3 @@
+google-cloud-vision
+pytube
+youtube-search-python

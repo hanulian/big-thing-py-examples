@@ -9,6 +9,7 @@ class SmartThingsAction(Enum):
     COLOR = 'color'
     STATUS = 'status'
 
+
 # TODO: complete this class implementation
 
 

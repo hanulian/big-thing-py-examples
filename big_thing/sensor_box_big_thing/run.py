@@ -44,7 +44,7 @@ def setup_bme280():
 
 def setup_sgp30():
     sgp30.iaq_init()
-    sgp30.set_iaq_baseline(0x8973, 0x8aae)
+    sgp30.set_iaq_baseline(0x8973, 0x8AAE)
 
 
 def sensor_init():
@@ -108,81 +108,46 @@ def sense_VOC():
 
 def arg_parse():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name", '-n', action='store', type=str,
-                        required=False, default='sensor_box_big_thing', help="thing name")
-    parser.add_argument("--host", '-ip', action='store', type=str,
-                        required=False, default='127.0.0.1', help="host name")
-    parser.add_argument("--port", '-p', action='store', type=int,
-                        required=False, default=11083, help="port")
-    parser.add_argument("--alive_cycle", '-ac', action='store', type=int,
-                        required=False, default=60, help="alive cycle")
-    parser.add_argument("--log", action='store_true', dest='log',
-                        required=False, default=True, help="log enable")
+    parser.add_argument(
+        "--name", '-n', action='store', type=str, required=False, default='sensor_box_big_thing', help="thing name"
+    )
+    parser.add_argument(
+        "--host", '-ip', action='store', type=str, required=False, default='127.0.0.1', help="host name"
+    )
+    parser.add_argument("--port", '-p', action='store', type=int, required=False, default=1883, help="port")
+    parser.add_argument(
+        "--alive_cycle", '-ac', action='store', type=int, required=False, default=60, help="alive cycle"
+    )
+    parser.add_argument("--log", action='store_true', dest='log', required=False, default=True, help="log enable")
     args, unknown = parser.parse_known_args()
 
     return args
 
 
 def generate_thing(args):
-    tags = [SoPTag(name='sensor_box'), ]
+    tags = [
+        MXTag(name='sensor_box'),
+    ]
 
     function_list = []
-    value_list = [SoPValue(name='temp',
-                  function=sense_temp,
-                  type='double',
-                  bound=(-100, 100),
-                  tag_list=tags,
-                  cycle=1),
-                  SoPValue(name='humid',
-                  function=sense_humid,
-                  type='double',
-                  bound=(0, 100),
-                  tag_list=tags,
-                  cycle=1),
-                  SoPValue(name='pressure',
-                  function=sense_pressure,
-                  type='double',
-                  bound=(0, 10000),
-                  tag_list=tags,
-                  cycle=1),
-                  SoPValue(name='CO2',
-                  function=sense_CO2,
-                  type='int',
-                  bound=(
-                      0, 10000),
-                  tag_list=tags,
-                  cycle=1),
-                  SoPValue(name='brightness',
-                  function=sense_brightness,
-                  type='int',
-                  bound=(
-                      0, 10000),
-                  tag_list=tags,
-                  cycle=1),
-                  SoPValue(name='sound',
-                  function=sense_sound,
-                  type='int',
-                  bound=(
-                      0, 10000),
-                  tag_list=tags,
-                  cycle=1),
-                  SoPValue(name='dust',
-                  function=sense_dust,
-                  type='double',
-                  bound=(
-                      0, 10000),
-                  tag_list=tags,
-                  cycle=1),
-                  SoPValue(name='VOC',
-                  function=sense_VOC,
-                  type='double',
-                  bound=(
-                      0, 10000),
-                  tag_list=tags,
-                  cycle=1)]
+    value_list = [
+        MXValue(name='temp', function=sense_temp, type='double', bound=(-100, 100), tag_list=tags, cycle=1),
+        MXValue(name='humid', function=sense_humid, type='double', bound=(0, 100), tag_list=tags, cycle=1),
+        MXValue(name='pressure', function=sense_pressure, type='double', bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='CO2', function=sense_CO2, type='int', bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='brightness', function=sense_brightness, type='int', bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='sound', function=sense_sound, type='int', bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='dust', function=sense_dust, type='double', bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='VOC', function=sense_VOC, type='double', bound=(0, 10000), tag_list=tags, cycle=1),
+    ]
 
-    thing = SoPBigThing(name=args.name, ip=args.host, port=args.port, alive_cycle=args.alive_cycle,
-                        service_list=function_list + value_list)
+    thing = MXBigThing(
+        name=args.name,
+        ip=args.host,
+        port=args.port,
+        alive_cycle=args.alive_cycle,
+        service_list=function_list + value_list,
+    )
     return thing
 
 

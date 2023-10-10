@@ -1,0 +1,9 @@
+{
+  "storage_path": ".matter_server",
+  "vendor_id": 65521,
+  "fabric_id": 1,
+  "websocket_port": 5580,
+  "pin_code": 20202021,
+  "QR_code": "",
+  "manual_code": ""
+}

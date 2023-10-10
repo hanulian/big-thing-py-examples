@@ -1,11 +1,11 @@
 {
   "account_list": [
     {
-      "name": "[ACCOUNT_NAME1]",
+      "name": "[ACCOUNT_NAME]",
       "endpoint_host": "https://goqual.io/openapi",
-      "api_token": "[HEJHOME_API_KEY1]",
-      "client_id": "[HEJHOME_CLIENT_ID]",
-      "client_secret": "[HEJHOME_CLIENT_SECRET]"
+      "api_token": "[API_KEY]",
+      "client_id": "[CLIENT_ID]",
+      "client_secret": "[CLIENT_SECRET]"
     }
   ]
 }
