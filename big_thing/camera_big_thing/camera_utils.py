@@ -55,11 +55,16 @@ def camera_capture(image_name: str, cam_num: int = 0):
 
 def save_image_from_picamera(filename: str):
     try:
-        camera = Picamera2()
-        camera.start()
-        camera.capture_file(filename)
-        camera.close()
-        return True
+        if check_os_architecture() == '32bit':
+            with PiCamera() as camera:
+                camera.resolution = (1920, 1080)
+                camera.capture(filename)
+        elif check_os_architecture() == '64bit':
+            camera = Picamera2()
+            camera.start()
+            camera.capture_file(filename)
+            camera.close()
+            return True
     except:
         return False
 
