@@ -1,26 +1,23 @@
-import cv2
-import platform
-import time
-import os
+from big_thing_py.utils.common_util import *
 
-PICAMERA = True
-
-
-def is_raspberry_pi():
-    try:
-        with open('/proc/cpuinfo', 'r') as f:
-            cpuinfo = f.read()
-        return (platform.uname().system == 'Linux') and ('Raspberry Pi' in cpuinfo)
-    except:
-        return False
+PICAMERA = False
 
 
 try:
-    from picamera2 import Picamera2
-except ImportError:
-    if is_raspberry_pi():
-        os.system('pip3 install picamera2')
-        from picamera2 import Picamera2
+    if PICAMERA:
+        if not is_raspberry_pi():
+            import cv2
+        else:
+            if check_os_architecture() == '32bit':
+                from picamera import PiCamera
+            elif check_os_architecture() == '64bit':
+                from picamera2 import Picamera2
+            else:
+                raise Exception('Unknown architecture')
+    else:
+        import cv2
+except ImportError as e:
+    install_missing_package(e)
 
 
 def camera_capture(image_name: str, cam_num: int = 0):

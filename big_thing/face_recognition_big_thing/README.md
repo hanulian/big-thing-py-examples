@@ -47,7 +47,7 @@ python run.py
 
   timeout 시간동안 얼굴을 검출하여 어떤 인물인지 판단하는 서비스. 만약 timeout 시간 동안 얼굴이 검출되지 않는 경우 `None`을 반환한다.
 
-- `face_recognition_from_file(img_path: str) -> str`
+- `face_recognition_from_file(img_path: str, timeout: double) -> str`
 
   특정 이미지 파일로 부터 인물을 추출하는 서비스.
 

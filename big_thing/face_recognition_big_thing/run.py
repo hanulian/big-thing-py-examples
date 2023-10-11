@@ -5,51 +5,85 @@ import random
 import argparse
 
 
-def add_face() -> int:
-    return_value = random.randint(0, 100)
-    MXLOG_DEBUG(f'{get_current_function_name()} run... return: {return_value}')
-    return return_value
+def add_face(name: str) -> int:
+    pass
 
 
-def delete_face(int_arg: int) -> int:
-    return_value = int_arg
-    MXLOG_DEBUG(f'{get_current_function_name()} run... return: {return_value}')
-    return return_value
+def delete_face(name: str) -> int:
+    pass
 
 
-def func_with_arg_and_delay(int_arg: int, deley: float) -> int:
-    return_value = int_arg
-    MXLOG_DEBUG(f'{get_current_function_name()} run... return: {return_value}')
-    MXLOG_DEBUG(f'deley : {deley}')
-    time.sleep(deley)
-    return return_value
+def face_recognition(timeout: float) -> int:
+    pass
 
 
-def value_current_time() -> int:
-    return_value = int(get_current_time())
-    MXLOG_DEBUG(f'{get_current_function_name()} run! return: {return_value}')
-    return return_value
+def face_recognition_from_file(img_path: str, timeout: float) -> int:
+    pass
 
 
 def generate_thing(args):
     tag_list = [MXTag(name='basic'), MXTag(name='big_thing')]
-    arg_list = [MXArgument(name='int_arg', type=MXType.INTEGER, bound=(0, 10000))]
-    delay_arg = MXArgument(name='delay_arg', type=MXType.DOUBLE, bound=(0, 10000))
+
     function_list = [
-        MXFunction(func=func_no_arg, return_type=MXType.INTEGER, tag_list=tag_list, arg_list=[], energy=45),
-        MXFunction(func=func_with_arg, return_type=MXType.INTEGER, tag_list=tag_list, arg_list=arg_list, energy=12),
         MXFunction(
-            func=func_with_arg_and_delay,
+            func=add_face,
             return_type=MXType.INTEGER,
-            timeout=10,
             tag_list=tag_list,
-            arg_list=arg_list + [delay_arg],
-            energy=56,
+            arg_list=[
+                MXArgument(
+                    name='name',
+                    type=MXType.STRING,
+                    bound=(0, 10000),
+                )
+            ],
+            energy=45,
+        ),
+        MXFunction(
+            func=delete_face,
+            return_type=MXType.INTEGER,
+            tag_list=tag_list,
+            arg_list=[
+                MXArgument(
+                    name='name',
+                    type=MXType.STRING,
+                    bound=(0, 10000),
+                )
+            ],
+            energy=12,
+        ),
+        MXFunction(
+            func=face_recognition,
+            return_type=MXType.INTEGER,
+            tag_list=tag_list,
+            arg_list=[
+                MXArgument(
+                    name='timeout',
+                    type=MXType.DOUBLE,
+                    bound=(0, 10000),
+                )
+            ],
+            energy=12,
+        ),
+        MXFunction(
+            func=face_recognition_from_file,
+            return_type=MXType.INTEGER,
+            tag_list=tag_list,
+            arg_list=[
+                MXArgument(
+                    name='img_path',
+                    type=MXType.STRING,
+                    bound=(0, 10000),
+                ),
+                MXArgument(
+                    name='timeout',
+                    type=MXType.DOUBLE,
+                    bound=(0, 10000),
+                ),
+            ],
+            energy=12,
         ),
     ]
-    value_list = [
-        MXValue(func=value_current_time, type=MXType.INTEGER, bound=(0, 2147483647), tag_list=tag_list, cycle=10)
-    ]
+    value_list = []
 
     thing = MXBigThing(
         name=args.name,
