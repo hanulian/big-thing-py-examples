@@ -22,7 +22,9 @@ def arg_parse():
     parser.add_argument("--endpoint", '-ep', action='store', type=str, required=False, default='', help="endpoint")
     parser.add_argument("--api_token", '-k', action='store', type=str, required=False, default='', help="api token")
     parser.add_argument("--scan_cycle", '-sc', action='store', type=int, required=False, default=60, help="scan cycle")
-    parser.add_argument("--config", '-c', action='store', type=str, required=False, default='', help="config file path")
+    parser.add_argument(
+        "--config", '-c', action='store', type=str, required=False, default='config.json', help="config file path"
+    )
     parser.add_argument(
         "--config_select", '-s', action='store', type=str, required=False, default='', help="config select"
     )

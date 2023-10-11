@@ -33,7 +33,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
         append_mac_address: bool = True,
         manager_mode: MXManagerMode = MXManagerMode.SPLIT,
         scan_cycle=5,
-        conf_file_path: str = 'hejhome_conf.json',
+        conf_file_path: str = 'config.json',
         conf_select: str = '',
     ):
         super().__init__(

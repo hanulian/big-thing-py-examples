@@ -33,12 +33,15 @@ $ pip3 install scikit-learn
 
 import math
 from sklearn import neighbors
+
+# from sklearn.neighbors import KNeighborsClassifier
 import os
 import os.path
 import pickle
 from PIL import Image, ImageDraw
 import face_recognition
 from face_recognition.face_recognition_cli import image_files_in_folder
+import numpy as np
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
@@ -49,7 +52,6 @@ def train(
     n_neighbors: int = None,
     knn_algo: str = 'ball_tree',
     verbose: bool = False,
-    model_path: str = None,
     force_retrain: bool = False,
 ):
     """
@@ -80,11 +82,15 @@ def train(
     y: list = []
 
     # Load a pre-trained KNN classifier (if one was passed in)
-    if model_path is not None:
-        with open(model_path, 'rb') as f:
-            knn_clf = pickle.load(f)
-            X = knn_clf._fit_X
-            y = knn_clf.classes_
+    if model_save_path is not None:
+        try:
+            with open(model_save_path, 'rb') as f:
+                print(f'Load pretrained KNN model...')
+                knn_clf = pickle.load(f)
+                X = list(knn_clf._fit_X)
+                y = list(knn_clf.classes_)
+        except FileNotFoundError:
+            pass
 
     # Loop through each person in the training set
     for class_dir in os.listdir(train_dir):
@@ -109,7 +115,8 @@ def train(
                     print(f'Image {img_path} not suitable for training: {error_msg}')
             else:
                 # Add face encoding for current image to the training set
-                X.append(face_recognition.face_encodings(image, known_face_locations=face_bounding_boxes)[0])
+                face_encode = face_recognition.face_encodings(image, known_face_locations=face_bounding_boxes)[0]
+                X.append(face_encode)
                 y.append(img_path)
 
     # Determine how many neighbors to use for weighting in the KNN classifier
@@ -206,32 +213,97 @@ def show_prediction_labels_on_image(img_path, predictions):
     pil_image.show()
 
 
-if __name__ == '__main__':
-    # STEP 1: Train the KNN classifier and save it to disk
-    # Once the model is trained and saved, you can skip this step next time.
-    print('Training KNN classifier...')
-    classifier = train(
-        'dataset',
-        model_save_path='trained_knn_model.clf',
-        n_neighbors=2,
-        model_path='trained_knn_model.clf',
-        force_retrain=False,
-    )
-    print('Training complete!')
+class FaceRecognizer:
+    def __init__(self, dataset_path: str = 'dataset', model_path: str = 'model.pkl', threshold: float = 0.3) -> None:
+        self.dataset_path = dataset_path
+        self.model_path = model_path
+        self.encodings = []
+        self.names = []
+        self.knn = None
+        self.trained_persons = set()
+        self.threshold = threshold
 
-    # STEP 2: Using the trained classifier, make predictions for unknown images
+        self.load_model()
+
+    def train(self) -> None:
+        current_encodings = []
+        current_names = []
+
+        for person in os.listdir(self.dataset_path):
+            if person in self.trained_persons:
+                print(f'{person} is already trained. Skip...')
+                continue
+
+            person_path = os.path.join(self.dataset_path, person)
+
+            for image_name in os.listdir(person_path):
+                print(f'training {person} from {image_name}...')
+                image_path = os.path.join(person_path, image_name)
+                image = face_recognition.load_image_file(image_path)
+                face_locations = face_recognition.face_locations(image)
+                face_encodings = face_recognition.face_encodings(image, known_face_locations=face_locations)
+
+                current_encodings.extend(face_encodings)
+                current_names.extend([person] * len(face_encodings))
+
+            self.trained_persons.add(person)
+
+        self.encodings.extend(current_encodings)
+        self.names.extend(current_names)
+
+        self.knn = neighbors.KNeighborsClassifier(n_neighbors=1, metric="euclidean")
+        self.knn.fit(self.encodings, self.names)
+
+        self.save_model()
+
+    def recognize(self, image_path: str) -> list:
+        if not os.path.isfile(image_path) or os.path.splitext(image_path)[1][1:] not in ALLOWED_EXTENSIONS:
+            raise Exception(f'Invalid image path: {image_path}')
+
+        if self.knn is None and self.model_path is None:
+            raise Exception('Must supply knn classifier either though knn_clf or model_path')
+
+        image = face_recognition.load_image_file(image_path)
+        face_locations = face_recognition.face_locations(image)
+        face_encodings = face_recognition.face_encodings(image, known_face_locations=face_locations)
+        closest_distances = self.knn.kneighbors(face_encodings, n_neighbors=1)
+        are_matches = [closest_distances[0][i][0] <= self.threshold for i in range(len(face_locations))]
+
+        result = [
+            (pred, loc, image_path) if rec else ('unknown', loc, image_path)
+            for pred, loc, rec in zip(self.knn.predict(face_encodings), face_locations, are_matches)
+        ]
+        return result
+
+    def save_model(self) -> None:
+        data = {
+            'encodings': self.encodings,
+            'names': self.names,
+            'knn': self.knn,
+            'trained_persons': self.trained_persons,
+        }
+        with open(self.model_path, 'wb') as file:
+            pickle.dump(data, file)
+
+    def load_model(self) -> None:
+        if os.path.exists(self.model_path):
+            with open(self.model_path, 'rb') as file:
+                data = pickle.load(file)
+                self.encodings = data['encodings']
+                self.names = data['names']
+                self.knn = data['knn']
+                self.trained_persons = data.get('trained_persons', set())
+
+    def check_face_exist(self, name: str) -> bool:
+        return name in self.names
+
+
+if __name__ == '__main__':
+    recognizer = FaceRecognizer(dataset_path='dataset', model_path='model.clf')
+    recognizer.train()
+
     for image_file in os.listdir('test_img'):
         full_file_path = os.path.join('test_img', image_file)
-
-        print(f'Looking for faces in {image_file}')
-
-        # Find all people in the image using a trained classifier model
-        # Note: You can pass in either a classifier file name or a classifier model instance
-        predictions = predict(full_file_path, model_path='trained_knn_model.clf')
-
-        # Print results on the console
-        for name, (top, right, bottom, left) in predictions:
-            print(f'- Found {name} at ({left}, {top})')
-
-        # Display results overlaid on an image
-        # show_prediction_labels_on_image(os.path.join('test_img', image_file), predictions)
+        predictions = recognizer.recognize(full_file_path)
+        for name, (top, right, bottom, left), image_path in predictions:
+            print(f'- Found {name} at ({left}, {top}) in {image_path}')

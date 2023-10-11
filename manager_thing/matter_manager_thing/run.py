@@ -20,7 +20,7 @@ def arg_parse():
     parser.add_argument("--log", action='store_true', dest='log', required=False, default=True, help="log enable")
     parser.add_argument("--scan_cycle", '-sc', action='store', type=int, required=False, default=60, help="scan cycle")
     parser.add_argument(
-        "--config", '-c', action='store', type=str, required=False, default='matter_conf.json', help="config file path"
+        "--config", '-c', action='store', type=str, required=False, default='config.json', help="config file path"
     )
     parser.add_argument(
         "--config_select", '-s', action='store', type=str, required=False, default='', help="config select"

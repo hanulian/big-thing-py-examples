@@ -41,9 +41,7 @@ def camera_capture(image_name: str, cam_num: int = 0):
             else:
                 ret = save_image_from_usb_camera(filename=image_name)
         else:
-            cam = cv2.VideoCapture(cam_num)
-            ret, frame = cam.read()
-            cv2.imwrite(image_name, frame)
+            ret = save_image_from_usb_camera(filename=image_name)
     except:
         return False
     finally:
@@ -57,10 +55,12 @@ def save_image_from_picamera(filename: str):
     try:
         if check_os_architecture() == '32bit':
             with PiCamera() as camera:
-                camera.resolution = (1920, 1080)
+                camera.resolution = camera.MAX_RESOLUTION
                 camera.capture(filename)
         elif check_os_architecture() == '64bit':
             camera = Picamera2()
+            camera_config = camera.create_still_configuration(main={'size': (1920, 1080)})
+            camera.configure(camera_config)
             camera.start()
             camera.capture_file(filename)
             camera.close()
@@ -71,10 +71,12 @@ def save_image_from_picamera(filename: str):
 
 def save_image_from_usb_camera(filename: str):
     try:
-        cap = cv2.VideoCapture(0)
-        ret, frame = cap.read()
+        cam = cv2.VideoCapture(0)
+        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 99999)
+        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 99999)
+        ret, frame = cam.read()
         cv2.imwrite(filename, frame)
-        cap.release()
+        cam.release()
         return True
     except:
         return False

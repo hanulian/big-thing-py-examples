@@ -150,7 +150,7 @@ python run.py
 
   Matter 디바이스 스캔 주기.
 
-- `-c --config | default='matter_conf.json'`
+- `-c --config | default='config.json'`
 
   Manager Thing을 실행할 때 로드할 설정 파일 경로.
 
