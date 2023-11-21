@@ -35,7 +35,7 @@ python run.py
 
 ## Function Services
 
-- `add_face(name: str) -> bool`
+- `add_face() -> bool`
 
   인물 얼굴을 데이터 베이스에 추가하는 서비스.
 

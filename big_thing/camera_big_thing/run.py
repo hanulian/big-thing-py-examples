@@ -38,13 +38,22 @@ def arg_parse():
     )
     parser.add_argument("--auto_scan", '-as', action='store_true', required=False, help="middleware auto scan enable")
     parser.add_argument("--log", action='store_true', required=False, help="log enable")
+    parser.add_argument(
+        "--log_mode", action='store', type=str, required=False, default=MXPrintMode.ABBR.value, help="log mode"
+    )
+    parser.add_argument(
+        "--append_mac", '-am', action='store_false', required=False, help="append mac address to thing name"
+    )
     args, unknown = parser.parse_known_args()
 
     return args
 
 
 def generate_thing(args):
-    tag_list = [MXTag(name='camera')]
+    tag_list = [
+        MXTag(name='camera'),
+        MXTag(name='big_thing'),
+    ]
     function_list = [
         MXFunction(func=capture, exec_time=10, timeout=10, return_type=MXType.STRING, tag_list=tag_list, arg_list=[]),
         MXFunction(
@@ -63,6 +72,8 @@ def generate_thing(args):
         ip=args.host,
         port=args.port,
         alive_cycle=args.alive_cycle,
+        log_mode=MXPrintMode.get(args.log_mode),
+        append_mac_address=args.append_mac,
         service_list=function_list + value_list,
     )
     return thing

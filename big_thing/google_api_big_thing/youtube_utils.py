@@ -1,10 +1,14 @@
 from big_thing_py.utils.log_util import *
 from big_thing_py.utils.exception_util import *
 
-from youtubesearchpython import VideosSearch
-from pytube import YouTube
+from yt_dlp import YoutubeDL
 
-# from urllib.parse import urlparse
+
+YDL_OPTS = {
+    'quiet': True,
+    'extract_flat': True,
+    'force_generic_extractor': True,
+}
 
 
 def get_youtube(keyword: str) -> Union[str, bool]:
@@ -18,9 +22,8 @@ def get_youtube(keyword: str) -> Union[str, bool]:
         return False
 
 
-def _get_youtube(url: str) -> Union[str, bool]:
+def _get_youtube(url: str, mode: str = 'file') -> Union[str, bool]:
     try:
-        yt = YouTube(url)
         if not bool(
             url.startswith('https://')
             or url.startswith('http://')
@@ -30,46 +33,40 @@ def _get_youtube(url: str) -> Union[str, bool]:
             print('not youtube url...')
             return False
 
-        target_url = yt.streams.filter(only_audio=True).last()
-        # info = dict(
-        #     webpage_url=url,
-        #     title=yt.title,
-        #     uploader=yt.author,
-        #     uploader_url=yt.channel_url,
-        #     target_url=target_url.url,
-        #     thumbnail=yt.thumbnail_url,
-        # )
-        return target_url.url
+        ydl_opts = YDL_OPTS.copy()
+        ydl_opts.update(
+            {
+                'format': 'bestaudio',
+                # 'outtmpl': 'download_%(title)s.%(ext)s',
+                'outtmpl': 'downloaded_music.%(ext)s',
+            }
+        )
+        audio_downloader = YoutubeDL(ydl_opts)
+        if mode == 'url':
+            result = audio_downloader.extract_info(url, download=False)
+            return result['url']
+        elif mode == 'file':
+            result = audio_downloader.extract_info(url, download=True)
+            return result['requested_downloads'][0]['filepath']
     except Exception as e:
         print_error(e)
         return False
 
 
-def search_youtube(query: str, max_results=5) -> List[str]:
+def search_youtube(key_word: str, max_results=5) -> List[str]:
     try:
-        videos_search = VideosSearch(query, limit=max_results)
-
-        if videos_search.result()['result']:
-            video_info_list = videos_search.result()['result']
-            video_url_list = [video_info['link'] for video_info in video_info_list]
-            return video_url_list
-        else:
-            MXLOG_DEBUG(f'No video found for {query}', 'red')
-            return False
+        with YoutubeDL(YDL_OPTS) as ydl:
+            result = ydl.extract_info(f"ytsearch{max_results}:{key_word}", download=False)
+            return [result['url'] for result in result['entries'] if result['ie_key'] == 'Youtube']
     except Exception as e:
         print(f'오류 발생: {e}')
         return False
 
 
-# def is_valid_url(input_string) -> bool:
-#     try:
-#         result = urlparse(input_string)
-#         return all([result.scheme, result.netloc])
-#     except ValueError:
-#         return False
-
-
 if __name__ == '__main__':
     START_LOGGER()
-    res = get_youtube('화날 때 듣는 노래')
-    print(res['target_url'])
+    # res = get_youtube('화날 때 듣는 노래')
+    search_result = search_youtube('화날 때 듣는 노래')
+    for url in search_result:
+        stream_url_result = _get_youtube(url, mode='file')
+        print(f'stream_url_result: {stream_url_result}')

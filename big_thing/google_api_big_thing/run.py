@@ -14,7 +14,7 @@ google_api_client = GoogleAPIClient()
 def arg_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--name", '-n', action='store', type=str, required=False, default='google_big_thing', help="thing name"
+        "--name", '-n', action='store', type=str, required=False, default='google_api_big_thing', help="thing name"
     )
     parser.add_argument(
         "--host", '-ip', action='store', type=str, required=False, default='127.0.0.1', help="host name"
@@ -25,16 +25,25 @@ def arg_parse():
     )
     parser.add_argument("--auto_scan", '-as', action='store_true', required=False, help="middleware auto scan enable")
     parser.add_argument("--log", action='store_true', required=False, help="log enable")
+    parser.add_argument(
+        "--log_mode", action='store', type=str, required=False, default=MXPrintMode.ABBR.value, help="log mode"
+    )
+    parser.add_argument(
+        "--append_mac", '-am', action='store_false', required=False, help="append mac address to thing name"
+    )
     args, unknown = parser.parse_known_args()
 
     return args
 
 
 def generate_thing(args):
-    tag_list = [MXTag(name='google')]
+    tag_list = [
+        MXTag(name='google'),
+        MXTag(name='big_thing'),
+    ]
     function_list = [
         MXFunction(
-            func=google_api_client.detect_face,
+            func=google_api_client.detect_emotion,
             return_type=MXType.STRING,
             tag_list=tag_list,
             arg_list=[
@@ -65,6 +74,8 @@ def generate_thing(args):
         ip=args.host,
         port=args.port,
         alive_cycle=args.alive_cycle,
+        log_mode=MXPrintMode.get(args.log_mode),
+        append_mac_address=args.append_mac,
         service_list=function_list + value_list,
     )
     return thing

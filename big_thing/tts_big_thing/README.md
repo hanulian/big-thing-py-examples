@@ -1,17 +1,17 @@
 # 설명
 
-음악 재생 기능을 제공하는 Thing 예제.
+TTS 음성 발화기능을 제공하는 Thing 예제.
 
 # 실행
 
 ```bash
-cd big_thing/music_player_big_thing
+cd big_thing/tts_big_thing
 python run.py
 ```
 
 # 옵션
 
-- `-n, --name | default = None
+- `-n, --name | default = None`
 
   Thing의 이름. 이 이름은 Thing을 구분하기 위한 ID이기도 하다.
 
@@ -27,6 +27,10 @@ python run.py
 
   Thing의 alive 패킷 전송 주기. alive 패킷을 통해 Middleware가 Thing의 활성화 여부를 파악한다.
 
+- `-as, --auto_scan | default=True`
+
+  Middleware 자동스캔 기능 활성화 여부.
+
 - `--log | default=True`
 
   Thing의 log기능의 활성화 여부.
@@ -35,17 +39,9 @@ python run.py
 
 ## Function Services
 
-- `play(source: str) -> bool`
+- `speak(text: str) -> bool`
 
-  인자로 받은 `source`가 재생가능한 파일 경로인 경우 해당 파일을 재생하고, url인 경우 해당 url으로 부터 음악 파일을 스트리밍받아 재생하는 서비스.
-
-- `pause_toggle() -> bool`
-
-  음악이 재생중인 경우 일시정지하고, 멈춰있는 경우 다시 재생하는 서비스.
-
-- `stop() -> bool`
-
-  음악 재생을 중지하는 서비스.
+  text를 입력으로 받아 음성파일로 변환한 다음 방화하는 서비스. 성공하는 경우 True를 반환한다.
 
 ## Value Services
 

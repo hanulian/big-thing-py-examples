@@ -62,7 +62,10 @@ def arg_parse():
 
 
 def generate_thing(args):
-    tag_list = [MXTag(name='alert')]
+    tag_list = [
+        MXTag(name='alert'),
+        MXTag(name='big_thing'),
+    ]
     function_list = [
         MXFunction(
             func=alert,

@@ -127,7 +127,10 @@ def generate_thing(args) -> MXBigThing:
     alive_cycle = 60
     value_cycle = alive_cycle
 
-    tag_list = [MXTag('full')]
+    tag_list = [
+        MXTag('full'),
+        MXTag(name='big_thing'),
+    ]
 
     int_arg_list = [
         MXArgument(name='int_arg', type=MXType.INTEGER, bound=(-2147483648, 2147483647)),
@@ -289,13 +292,15 @@ def generate_thing(args) -> MXBigThing:
             arg_list=full_arg_list,
         ),
     ]
+
     thing = MXBigThing(
         name=args.name,
         ip=args.host,
         port=args.port,
         alive_cycle=args.alive_cycle,
-        service_list=value_list + no_arg_function_list + arg_function_list,
         log_mode=MXPrintMode.get(args.log_mode),
+        append_mac_address=args.append_mac,
+        service_list=value_list + no_arg_function_list + arg_function_list,
     )
     return thing
 
@@ -316,6 +321,12 @@ def arg_parse():
     parser.add_argument("--log", action='store_true', required=False, help="log enable")
     parser.add_argument(
         "--log_mode", action='store', type=str, required=False, default=MXPrintMode.ABBR.value, help="log mode"
+    )
+    parser.add_argument(
+        "--log_mode", action='store', type=str, required=False, default=MXPrintMode.ABBR.value, help="log mode"
+    )
+    parser.add_argument(
+        "--append_mac", '-am', action='store_false', required=False, help="append mac address to thing name"
     )
     args, unknown = parser.parse_known_args()
 

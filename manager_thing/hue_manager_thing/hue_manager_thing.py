@@ -146,12 +146,11 @@ class MXHueManagerThing(MXPollManagerThing):
         # capabilities: dict = staff_thing_info['capabilities']
         # config: dict = staff_thing_info['config']
 
-        ALIVE_CYCLE = 10
         if productname == 'Hue color lamp':
             hue_staff_thing = MXHueColorLampStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=ALIVE_CYCLE,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=uniqueid,
                 idx=idx,
                 device_function_service_func=self._device_function_service_func,
@@ -161,7 +160,7 @@ class MXHueManagerThing(MXPollManagerThing):
             hue_staff_thing = MXHueGoStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=ALIVE_CYCLE,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=uniqueid,
                 idx=idx,
                 device_function_service_func=self._device_function_service_func,
@@ -171,7 +170,7 @@ class MXHueManagerThing(MXPollManagerThing):
             hue_staff_thing = MXHueLightStripPlusStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=ALIVE_CYCLE,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=uniqueid,
                 idx=idx,
                 device_function_service_func=self._device_function_service_func,
@@ -181,7 +180,7 @@ class MXHueManagerThing(MXPollManagerThing):
             hue_staff_thing = MXHueMotionSensorStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=ALIVE_CYCLE,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=uniqueid,
                 idx=idx,
                 device_function_service_func=self._device_function_service_func,
@@ -402,8 +401,6 @@ class MXHueManagerThing(MXPollManagerThing):
                 )
         elif action == MXHueAction.SET_BRIGHTNESS:
             if device_type == MXHueDeviceType.LIGHT:
-                if not isinstance(brightness, tuple):
-                    raise Exception('brightness must be tuple type')
                 ret: requests.Response = API_request(
                     method=RequestMethod.PUT,
                     url=light_endpoint % idx,

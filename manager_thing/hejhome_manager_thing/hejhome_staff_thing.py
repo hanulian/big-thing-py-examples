@@ -19,10 +19,10 @@ class MXHejhomeStaffThing(MXStaffThing):
         device_value_service_func: Callable = None,
     ):
         super().__init__(name, service_list, alive_cycle, is_super, is_parallel, staff_thing_id)
-        self.home_name = home_name
-        self.home_id = home_id
-        self.room_name = room_name
-        self.room_id = room_id
+        self._home_name = home_name
+        self._home_id = home_id
+        self._room_name = room_name
+        self._room_id = room_id
         self._device_function_service_func = device_function_service_func
         self._device_value_service_func = device_value_service_func
 
@@ -34,7 +34,7 @@ class MXHejhomeStaffThing(MXStaffThing):
             MXTag('Hejhome'),
         ]
         self._default_tag_list: List[MXTag] = [
-            MXTag(tag)
+            MXTag(tag if check_valid_identifier(tag) else convert_to_valid_string(tag))
             for tag in [
                 self._name,
                 self._staff_thing_id,
@@ -118,6 +118,32 @@ class MXBruntPlugHejhomeStaffThing(MXHejhomeStaffThing):
         ret: requests.Response = self._device_function_service_func(self._staff_thing_id, HejHomeAction.STATUS)
         return float(ret['deviceState']['curVoltage']) / 10
 
+    @MXStaffThing.print_func_info
+    def is_on(self) -> bool:
+        ret: requests.Response = self._device_value_service_func(self._staff_thing_id, HejHomeAction.STATUS)
+
+        for power, on_state in ret['deviceState'].items():
+            if on_state:
+                return True
+        else:
+            return False
+
+    @MXStaffThing.print_func_info
+    def on(self) -> bool:
+        ret: requests.Response = self._device_function_service_func(self._staff_thing_id, HejHomeAction.ON)
+        if ret:
+            return True
+        else:
+            return False
+
+    @MXStaffThing.print_func_info
+    def off(self) -> bool:
+        ret: requests.Response = self._device_function_service_func(self._staff_thing_id, HejHomeAction.OFF)
+        if ret:
+            return True
+        else:
+            return False
+
     @override
     def make_service_list(self):
         super().make_service_list()
@@ -151,7 +177,22 @@ class MXBruntPlugHejhomeStaffThing(MXHejhomeStaffThing):
                 cycle=60,
             ),
         ]
-        staff_function_list: List[MXService] = []
+        staff_function_list: List[MXService] = [
+            MXFunction(
+                name='on',
+                func=self.on,
+                tag_list=self._default_tag_list,
+                return_type=MXType.BOOL,
+                arg_list=[],
+            ),
+            MXFunction(
+                name='off',
+                func=self.off,
+                tag_list=self._default_tag_list,
+                return_type=MXType.BOOL,
+                arg_list=[],
+            ),
+        ]
         self.add_staff_service(staff_value_list + staff_function_list)
 
 
@@ -187,7 +228,7 @@ class MXCurtainHejhomeStaffThing(MXHejhomeStaffThing):
         )
 
     @MXStaffThing.print_func_info
-    def is_onen(self) -> bool:
+    def is_open(self) -> bool:
         ret: requests.Response = self._device_value_service_func(self._staff_thing_id, HejHomeAction.STATUS)
 
         open_state: str = ret['deviceState']['workState']
@@ -234,8 +275,8 @@ class MXCurtainHejhomeStaffThing(MXHejhomeStaffThing):
 
         staff_value_list = [
             MXValue(
-                name='is_onen',
-                func=self.is_onen,
+                name='is_open',
+                func=self.is_open,
                 tag_list=self._default_tag_list,
                 type=MXType.BOOL,
                 bound=(0, 2),
@@ -409,7 +450,7 @@ class MXZigbeeSwitch3HejhomeStaffThing(MXHejhomeStaffThing):
         self.add_staff_service(staff_value_list + staff_function_list)
 
 
-class MXIrDiyHejhomeStaffThing(MXHejhomeStaffThing):
+class MXIRDiyHejhomeStaffThing(MXHejhomeStaffThing):
     def __init__(
         self,
         name: str,
@@ -449,7 +490,7 @@ class MXIrDiyHejhomeStaffThing(MXHejhomeStaffThing):
         self.add_staff_service(staff_value_list + staff_function_list)
 
 
-class MXIrAirconditionerHejhomeStaffThing(MXHejhomeStaffThing):
+class MXIRAirconditionerHejhomeStaffThing(MXHejhomeStaffThing):
     def __init__(
         self,
         name: str,
@@ -480,12 +521,60 @@ class MXIrAirconditionerHejhomeStaffThing(MXHejhomeStaffThing):
             device_value_service_func,
         )
 
+    @MXStaffThing.print_func_info
+    def on(self) -> bool:
+        ret: requests.Response = self._device_function_service_func(self._staff_thing_id, HejHomeAction.ON)
+        if ret:
+            return True
+        else:
+            return False
+
+    @MXStaffThing.print_func_info
+    def off(self) -> bool:
+        ret: requests.Response = self._device_function_service_func(self._staff_thing_id, HejHomeAction.OFF)
+        if ret:
+            return True
+        else:
+            return False
+
+    @MXStaffThing.print_func_info
+    def set_temp(self, temp: int) -> bool:
+        ret: requests.Response = self._device_function_service_func(
+            self._staff_thing_id, HejHomeAction.SET_TEMP, temp=temp
+        )
+        if ret:
+            return True
+        else:
+            return False
+
     @override
     def make_service_list(self):
         super().make_service_list()
 
         staff_value_list = []
-        staff_function_list = []
+        staff_function_list = [
+            MXFunction(
+                name='on',
+                func=self.on,
+                tag_list=self._default_tag_list,
+                return_type=MXType.BOOL,
+                arg_list=[],
+            ),
+            MXFunction(
+                name='off',
+                func=self.off,
+                tag_list=self._default_tag_list,
+                return_type=MXType.BOOL,
+                arg_list=[],
+            ),
+            MXFunction(
+                name='set_temp',
+                func=self.set_temp,
+                tag_list=self._default_tag_list,
+                return_type=MXType.BOOL,
+                arg_list=[MXArgument(name='temp', type=MXType.INTEGER, bound=(0, 100))],
+            ),
+        ]
 
         self.add_staff_service(staff_value_list + staff_function_list)
 

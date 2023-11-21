@@ -63,7 +63,7 @@ fi
 `python-matter-server` 레포지토리를 클론합니다.
 
 ```bash
-git clone https://github.com/thsvkd/python-matter-server.git
+git clone https://github.com/thsvkd/python-matter-server.git -b bugfix/fix-open-commissioning-window-feature
 ```
 
 파이썬 패키지를 설치하기 전에, 가상 파이썬 환경을 비활성화 해야합니다.

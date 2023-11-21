@@ -110,14 +110,23 @@ class MXSmartThingsManagerThing(MXPollManagerThing):
         staff_thing_info_list = []
 
         whole_location_info = dict(location_list=[])
-        res = API_request(url=self._endpoint_scan_location, method=RequestMethod.GET, header=self._header)
+        res = API_request(
+            url=self._endpoint_scan_location,
+            method=RequestMethod.GET,
+            header=self._header,
+            timeout=timeout,
+        )
         if not res:
-            raise Exception('Failed to get location info')
+            MXLOG_DEBUG(f'Failed to get location info', 'red')
+            return False
         location_list = res['items']
         for location in location_list:
             location_info = dict(name=location['name'], id=location['locationId'], room_list=[])
             res = API_request(
-                url=self._endpoint_scan_room % location['locationId'], method=RequestMethod.GET, header=self._header
+                url=self._endpoint_scan_room % location['locationId'],
+                method=RequestMethod.GET,
+                header=self._header,
+                timeout=timeout,
             )
             if not res:
                 raise Exception('Failed to get room info')
@@ -127,9 +136,15 @@ class MXSmartThingsManagerThing(MXPollManagerThing):
                 location_info['room_list'].append(room_info)
             whole_location_info['location_list'].append(location_info)
 
-        res = API_request(url=self._endpoint_scan_device, method=RequestMethod.GET, header=self._header)
+        res = API_request(
+            url=self._endpoint_scan_device,
+            method=RequestMethod.GET,
+            header=self._header,
+            timeout=timeout,
+        )
         if not res:
-            raise Exception('Failed to get device info')
+            MXLOG_DEBUG(f'Failed to get device info', 'red')
+            return False
         device_list = res['items']
         # device type candidate: ['OCF', 'VIPER', 'MOBILE']
         device_list = [device for device in device_list if device['type'] != 'MOBILE']
@@ -160,100 +175,176 @@ class MXSmartThingsManagerThing(MXPollManagerThing):
         room_name = remove_non_ascii(staff_thing_info.get('room_name', '').translate(trans))
         room_id = remove_non_ascii(staff_thing_info.get('roomId', '').translate(trans))
         name = remove_non_ascii(staff_thing_info['name'].translate(trans))
-        staff_thing_id = remove_non_ascii(staff_thing_info['deviceId'].translate(trans))
+        staff_thing_id = staff_thing_info['deviceId']
         label = remove_non_ascii(staff_thing_info['label'].translate(trans))
         type = staff_thing_info['type']
         device_type_name = staff_thing_info.get('deviceTypeName', '')
 
-        if device_type_name == 'Samsung OCF TV':
-            smartthings_staff_thing = MXTVSmartThingsStaffThing(
-                name=name,
-                service_list=[],
-                alive_cycle=60,
-                staff_thing_id=staff_thing_id,
-                label=label,
-                location_name=location_name,
-                location_id=location_id,
-                room_name=room_name,
-                room_id=room_id,
-                device_function_service_func=self._device_function_service_func,
-                device_value_service_func=self._device_value_service_func,
-            )
-        elif device_type_name == 'Samsung OCF Air Purifier':
+        component_list = staff_thing_info.get('components', [])
+        main_component = [component for component in component_list if component['id'] == 'main'][0]
+        capabilities = main_component['capabilities']
+        category_list = main_component['categories']
+        category = category_list[0]['name']
+
+        label = convert_to_valid_string(label)
+        if category == 'AirPurifier':
             smartthings_staff_thing = MXAirPurifierSmartThingsStaffThing(
-                name=name,
+                name=label,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 label=label,
                 location_name=location_name,
                 location_id=location_id,
                 room_name=room_name,
                 room_id=room_id,
+                device_type=category,
                 device_function_service_func=self._device_function_service_func,
                 device_value_service_func=self._device_value_service_func,
             )
-        elif device_type_name == 'Samsung OCF Robot Vacuum':
-            smartthings_staff_thing = MXRobotVacuumSmartThingsStaffThing(
-                name=name,
+        elif category == 'BluetoothTracker':
+            smartthings_staff_thing = MXBluetoothTrackerSmartThingsStaffThing(
+                name=label,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 label=label,
                 location_name=location_name,
                 location_id=location_id,
                 room_name=room_name,
                 room_id=room_id,
+                device_type=category,
                 device_function_service_func=self._device_function_service_func,
                 device_value_service_func=self._device_value_service_func,
             )
-        elif type == 'BLE_D2D':
-            smartthings_staff_thing = MXSmartTagSmartThingsStaffThing(
-                name=name,
+        elif category == 'Charger':
+            smartthings_staff_thing = MXChargerSmartThingsStaffThing(
+                name=label,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 label=label,
                 location_name=location_name,
                 location_id=location_id,
                 room_name=room_name,
                 room_id=room_id,
+                device_type=category,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif category == 'Hub':
+            smartthings_staff_thing = MXHubSmartThingsStaffThing(
+                name=label,
+                service_list=[],
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                label=label,
+                location_name=location_name,
+                location_id=location_id,
+                room_name=room_name,
+                room_id=room_id,
+                device_type=category,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif category == 'Light':
+            smartthings_staff_thing = MXLightSmartThingsStaffThing(
+                name=label,
+                service_list=[],
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                label=label,
+                location_name=location_name,
+                location_id=location_id,
+                room_name=room_name,
+                room_id=room_id,
+                device_type=category,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif category == 'RobotCleaner':
+            smartthings_staff_thing = MXRobotCleanerSmartThingsStaffThing(
+                name=label,
+                service_list=[],
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                label=label,
+                location_name=location_name,
+                location_id=location_id,
+                room_name=room_name,
+                room_id=room_id,
+                device_type=category,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif category == 'SmartLock':
+            smartthings_staff_thing = MXSmartLockSmartThingsStaffThing(
+                name=label,
+                service_list=[],
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                label=label,
+                location_name=location_name,
+                location_id=location_id,
+                room_name=room_name,
+                room_id=room_id,
+                device_type=category,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif category == 'SmartPlug':
+            smartthings_staff_thing = MXSmartPlugSmartThingsStaffThing(
+                name=label,
+                service_list=[],
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                label=label,
+                location_name=location_name,
+                location_id=location_id,
+                room_name=room_name,
+                room_id=room_id,
+                device_type=category,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif category == 'Switch':
+            smartthings_staff_thing = MXSwitchSmartThingsStaffThing(
+                name=label,
+                service_list=[],
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                label=label,
+                location_name=location_name,
+                location_id=location_id,
+                room_name=room_name,
+                room_id=room_id,
+                device_type=category,
+                device_function_service_func=self._device_function_service_func,
+                device_value_service_func=self._device_value_service_func,
+            )
+        elif category == 'Television':
+            smartthings_staff_thing = MXTelevisionSmartThingsStaffThing(
+                name=label,
+                service_list=[],
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                label=label,
+                location_name=location_name,
+                location_id=location_id,
+                room_name=room_name,
+                room_id=room_id,
+                device_type=category,
                 device_function_service_func=self._device_function_service_func,
                 device_value_service_func=self._device_value_service_func,
             )
         else:
-            if type == 'VIPER':
-                smartthings_staff_thing = MXNonSmartThingsStaffThing(
-                    name=name,
-                    service_list=[],
-                    alive_cycle=60,
-                    staff_thing_id=staff_thing_id,
-                    label=label,
-                    location_name=location_name,
-                    location_id=location_id,
-                    room_name=room_name,
-                    room_id=room_id,
-                    device_function_service_func=self._device_function_service_func,
-                    device_value_service_func=self._device_value_service_func,
-                )
-            elif type == 'HUB':
-                smartthings_staff_thing = MXHubSmartThingsStaffThing(
-                    name=name,
-                    service_list=[],
-                    alive_cycle=60,
-                    staff_thing_id=staff_thing_id,
-                    label=label,
-                    location_name=location_name,
-                    location_id=location_id,
-                    room_name=room_name,
-                    room_id=room_id,
-                    device_function_service_func=self._device_function_service_func,
-                    device_value_service_func=self._device_value_service_func,
-                )
-            else:
-                MXLOG_DEBUG(f'Unexpected device type!!! - {device_type_name}', 'red')
-                # raise Exception('Unexpected device type!!!')
-                return False
+            MXLOG_DEBUG(f'Unexpected category!!! - {category}', 'red')
+            return False
+
+        # if not smartthings_staff_thing:
+        #     MXLOG_DEBUG(f'Unexpected device type!!! - {device_type_name}', 'red')
+        #     # raise Exception('Unexpected device type!!!')
+        #     return False
 
         smartthings_staff_thing.make_service_list()
         smartthings_staff_thing.set_function_result_queue(self._publish_queue)
@@ -363,7 +454,7 @@ class MXSmartThingsManagerThing(MXPollManagerThing):
                 method=RequestMethod.POST,
                 url=endpoint_device_control % staff_thing_id,
                 body=dict_to_json_string(
-                    {"commands": [{"component": "main", "capability": "switch", "command": "on"}]}
+                    {"commands": [{"component": "main", "capability": "switch", "command": "on", 'arguments': []}]}
                 ),
                 header=header,
             )
@@ -372,7 +463,7 @@ class MXSmartThingsManagerThing(MXPollManagerThing):
                 method=RequestMethod.POST,
                 url=endpoint_device_control % staff_thing_id,
                 body=dict_to_json_string(
-                    {"commands": [{"component": "main", "capability": "switch", "command": "off"}]}
+                    {"commands": [{"component": "main", "capability": "switch", "command": "off", 'arguments': []}]}
                 ),
                 header=header,
             )

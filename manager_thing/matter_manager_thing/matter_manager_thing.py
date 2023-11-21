@@ -75,7 +75,6 @@ class MXMatterManagerThing(MXPollManagerThing):
         self._matter_server_clean_start: bool = matter_server_clean_start
         self._websocket_message_id: int = 0
 
-        self._storage_path: str = ''
         self._vendor_id: int = 0
         self._fabric_id: int = 0
         self._websocket_port: int = 0
@@ -99,8 +98,8 @@ class MXMatterManagerThing(MXPollManagerThing):
 
     @override
     def setup(self, avahi_enable=True):
+        self._kill_matter_server()
         self._matter_server_pid = self._run_matter_server_instance(
-            self._storage_path,
             self._vendor_id,
             self._fabric_id,
             self._websocket_port,
@@ -119,7 +118,7 @@ class MXMatterManagerThing(MXPollManagerThing):
                 thread.start()
 
             if self._manager_mode == MXManagerMode.JOIN:
-                self._register_try(period=10, retry=5)
+                self._register()
             elif self._manager_mode == MXManagerMode.SPLIT:
                 # SPLIT 모드일 땐, manager thing 자기자신은 등록하지 않는다.
                 pass
@@ -164,7 +163,6 @@ class MXMatterManagerThing(MXPollManagerThing):
                     if current_time - self._last_alive_time > self._alive_cycle:
                         for staff_thing in self._staff_thing_list:
                             self._send_TM_ALIVE(staff_thing)
-                            staff_thing._last_alive_time = current_time
                 elif self._manager_mode == MXManagerMode.SPLIT:
                     # check staff thing is alive
                     current_time = get_current_time()
@@ -298,7 +296,7 @@ class MXMatterManagerThing(MXPollManagerThing):
             #     for cluster_type in cluster_type_list
             # ]
 
-            attributes = matter_device_info['attributes']
+            attributes: dict = matter_device_info['attributes']
             vendor_id = attributes[
                 f'0/{BasicInformation.Attributes.VendorID.cluster_id}/{BasicInformation.Attributes.VendorID.attribute_id}'
             ]
@@ -311,9 +309,10 @@ class MXMatterManagerThing(MXPollManagerThing):
                 ][0]['deviceType'],
                 None,
             )
-            unique_id = attributes[
-                f'0/{BasicInformation.Attributes.UniqueID.cluster_id}/{BasicInformation.Attributes.UniqueID.attribute_id}'
-            ]
+            unique_id = attributes.get(
+                f'0/{BasicInformation.Attributes.UniqueID.cluster_id}/{BasicInformation.Attributes.UniqueID.attribute_id}',
+                str(matter_device_info['node_id']),
+            )
             staff_thing_info = dict(
                 name=f'{device_type.__name__}_{unique_id}',
                 nodeId=matter_device_info['node_id'],
@@ -338,12 +337,11 @@ class MXMatterManagerThing(MXPollManagerThing):
         instanceName: str = staff_thing_info['instanceName']
         deviceType: type[DeviceType] = staff_thing_info['deviceType']
 
-        ALIVE_CYCLE = 10
         staff_thing_id = instanceName if instanceName else uniqueId
         if deviceType == device_types.OnOffLight:
             matter_staff_thing = MXOnOffLightMatterStaffThing(
                 name=f'{deviceType.__name__}_{staff_thing_id}',
-                alive_cycle=ALIVE_CYCLE,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 node_id=node_id,
                 vendor_id=vendorId,
@@ -354,7 +352,7 @@ class MXMatterManagerThing(MXPollManagerThing):
         elif deviceType == device_types.DimmableLight:
             matter_staff_thing = MXDimmableLightMatterStaffThing(
                 name=f'{deviceType.__name__}_{staff_thing_id}',
-                alive_cycle=ALIVE_CYCLE,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 node_id=node_id,
                 vendor_id=vendorId,
@@ -365,7 +363,18 @@ class MXMatterManagerThing(MXPollManagerThing):
         elif deviceType == device_types.ContactSensor:
             matter_staff_thing = MXContactSensorMatterStaffThing(
                 name=f'{deviceType.__name__}_{staff_thing_id}',
-                alive_cycle=ALIVE_CYCLE,
+                alive_cycle=self._alive_cycle,
+                staff_thing_id=staff_thing_id,
+                node_id=node_id,
+                vendor_id=vendorId,
+                product_id=productId,
+                device_type=deviceType,
+                send_api_command_func=self.send_api_command,
+            )
+        elif deviceType == device_types.OnOffPlugInUnit:
+            matter_staff_thing = MXOnOffPlugInUnitMatterStaffThing(
+                name=f'{deviceType.__name__}_{staff_thing_id}',
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 node_id=node_id,
                 vendor_id=vendorId,
@@ -412,7 +421,6 @@ class MXMatterManagerThing(MXPollManagerThing):
         if not conf_file:
             return
 
-        self._storage_path = conf_file.get('storage_path', None)
         self._vendor_id = convert_to_int(conf_file.get('vendor_id', None))
         self._fabric_id = convert_to_int(conf_file.get('fabric_id', None))
         self._websocket_port = convert_to_int(conf_file.get('websocket_port', None))
@@ -422,7 +430,6 @@ class MXMatterManagerThing(MXPollManagerThing):
 
     def _run_matter_server_instance(
         self,
-        storage_path: str = DEFAULT_STORAGE_PATH,
         vendor_id: int = DEFAULT_VENDOR_ID,
         fabric_id: int = DEFAULT_FABRIC_ID,
         websocket_port: int = DEFAULT_WEBSOCKET_PORT,
@@ -432,13 +439,14 @@ class MXMatterManagerThing(MXPollManagerThing):
             raise Exception("Python 3.10 or higher is required.")
 
         matter_server_instance_name = 'matter_server_instance.py'
+        storage_path = os.path.join(Path.home(), ".matter_server")
         if clean_start:
             self._kill_matter_server()
             shutil.rmtree(storage_path)
         os.makedirs(storage_path, exist_ok=True)
 
         process = subprocess.Popen(
-            f'python3 {matter_server_instance_name} --storage-path {storage_path} --port {websocket_port} --vendor-id {vendor_id} --fabric-id {fabric_id}',
+            f'python3 {matter_server_instance_name} --port {websocket_port} --vendor-id {vendor_id} --fabric-id {fabric_id}',
             shell=True,
         )
         pid = process.pid
@@ -455,15 +463,16 @@ class MXMatterManagerThing(MXPollManagerThing):
 
     def _kill_matter_server(self, pid: int = None):
         if pid:
-            subprocess.Popen(f'kill -2 {pid}', shell=True)
+            subprocess.Popen(f'kill -9 {pid}', shell=True)
         else:
             try:
                 output = subprocess.check_output(
                     'ps aux | grep matter_server_instance.py | grep -v grep | awk \'{print $2}\'', shell=True, text=True
                 )
-                pid = output.strip()
-                if pid:
-                    subprocess.Popen(f'kill -2 {pid}', shell=True)
+                pid = [o.strip() for o in output.split()]
+                for p in pid:
+                    subprocess.Popen(f'kill -9 {p}', shell=True)
+
             except subprocess.CalledProcessError:
                 print("matter_server_instance.py is not running")
 

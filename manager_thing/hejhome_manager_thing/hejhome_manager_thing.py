@@ -33,7 +33,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
         append_mac_address: bool = True,
         manager_mode: MXManagerMode = MXManagerMode.SPLIT,
         scan_cycle=5,
-        conf_file_path: str = 'config.json',
+        conf_file_path: str = '',
         conf_select: str = '',
     ):
         super().__init__(
@@ -213,7 +213,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
         return staff_thing_info_list
 
     def _create_staff(self, staff_thing_info: dict) -> MXHejhomeStaffThing:
-        trans = str.maketrans({' ': '_', '(': '_', ')': '_', '-': '_'})
+        trans = str.maketrans({' ': '_', '(': '_', ')': '_', '[': '_', ']': '_', '-': '_'})
 
         home_name = staff_thing_info.get('home_name', '')
         home_id = staff_thing_info.get('home_id', '')
@@ -233,7 +233,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
             hejhome_staff_thing = MXBruntPlugHejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -246,7 +246,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
             hejhome_staff_thing = MXCurtainHejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -259,7 +259,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
             hejhome_staff_thing = MXZigbeeSwitch3HejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -269,10 +269,10 @@ class MXHejhomeManagerThing(MXPollManagerThing):
                 device_value_service_func=self._device_value_service_func,
             )
         elif device_type == 'IrDiy':
-            hejhome_staff_thing = MXIrDiyHejhomeStaffThing(
+            hejhome_staff_thing = MXIRDiyHejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -282,10 +282,10 @@ class MXHejhomeManagerThing(MXPollManagerThing):
                 device_value_service_func=self._device_value_service_func,
             )
         elif device_type == 'IrAirconditioner':
-            hejhome_staff_thing = MXIrAirconditionerHejhomeStaffThing(
+            hejhome_staff_thing = MXIRAirconditionerHejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -298,7 +298,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
             hejhome_staff_thing = MXLedStripRgbw2HejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -311,7 +311,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
             hejhome_staff_thing = MXIrTvHejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -324,7 +324,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
             hejhome_staff_thing = MXRadarPIRSensorHejhomeStaffThing(
                 name=name,
                 service_list=[],
-                alive_cycle=60,
+                alive_cycle=self._alive_cycle,
                 staff_thing_id=staff_thing_id,
                 home_name=home_name,
                 home_id=home_id,
@@ -446,6 +446,7 @@ class MXHejhomeManagerThing(MXPollManagerThing):
         color: Tuple[int, int, int] = None,
         zb_sw: Tuple[bool, bool, bool] = None,
         curtain_percent: int = None,
+        temp: int = None,
     ) -> dict:
         endpoint_device_control = self._endpoint_device_control
         endpoint_get_device_state = self._endpoint_get_device_state
@@ -552,6 +553,13 @@ class MXHejhomeManagerThing(MXPollManagerThing):
                 body=dict_to_json_string(
                     {"requirments": {"hsvColor": {"hue": hue, "saturation": saturation, "brightness": brightness}}}
                 ),
+                header=self._header,
+            )
+        elif action == HejHomeAction.SET_TEMP:
+            ret: requests.Response = API_request(
+                method=RequestMethod.POST,
+                url=endpoint_device_control % staff_thing_id,
+                body=dict_to_json_string({"requirments": {"power": True, "temperature": temp}}),
                 header=self._header,
             )
         elif action == HejHomeAction.STATUS:

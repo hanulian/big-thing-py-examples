@@ -1,0 +1,3 @@
+gtts
+langdetect
+python-vlc

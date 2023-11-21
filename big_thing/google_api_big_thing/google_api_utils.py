@@ -1,9 +1,8 @@
 from big_thing_py.utils.log_util import *
 from big_thing_py.utils.exception_util import *
+from youtube_utils import get_youtube
 
 from google.cloud import vision
-from pytube import YouTube
-from youtube_utils import get_youtube
 
 
 class GoogleAPIClient:
@@ -61,7 +60,7 @@ class GoogleAPIClient:
 
         return max_emotions
 
-    def detect_face(self, image_path: str) -> str:
+    def detect_emotion(self, image_path: str) -> str:
         try:
             if not self._vision_api_client:
                 self._vision_api_client = vision.ImageAnnotatorClient()
@@ -94,7 +93,7 @@ class GoogleAPIClient:
         emotion_list = emotion_state.split(', ')
         keyword = (
             ' '.join([self.KEYWORD_MAP[emotion] for emotion in emotion_list if emotion in self.KEYWORD_MAP.keys()])
-            + ' 때 노래'
+            + ' 때 듣는 노래'
         )
         target_url = get_youtube(keyword)
         return target_url
@@ -103,6 +102,6 @@ class GoogleAPIClient:
 if __name__ == '__main__':
     START_LOGGER()
     client = GoogleAPIClient()
-    emotion_state = client.detect_face('./joy.jpg')
+    emotion_state = client.detect_emotion('./joy.jpg')
     target_url = client.recommend_song(emotion_state)
     print(target_url)

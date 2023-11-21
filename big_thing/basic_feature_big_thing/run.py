@@ -17,11 +17,11 @@ def func_with_arg(int_arg: int) -> int:
     return return_value
 
 
-def func_with_arg_and_delay(int_arg: int, deley: float) -> int:
+def func_with_arg_and_delay(int_arg: int, delay: float) -> int:
     return_value = int_arg
     MXLOG_DEBUG(f'{get_current_function_name()} run... return: {return_value}')
-    MXLOG_DEBUG(f'deley : {deley}')
-    time.sleep(deley)
+    MXLOG_DEBUG(f'delay : {delay}')
+    time.sleep(delay)
     return return_value
 
 
@@ -32,7 +32,10 @@ def value_current_time() -> int:
 
 
 def generate_thing(args):
-    tag_list = [MXTag(name='basic'), MXTag(name='big_thing')]
+    tag_list = [
+        MXTag(name='basic'),
+        MXTag(name='big_thing'),
+    ]
     arg_list = [MXArgument(name='int_arg', type=MXType.INTEGER, bound=(0, 10000))]
     delay_arg = MXArgument(name='delay_arg', type=MXType.DOUBLE, bound=(0, 10000))
     function_list = [
@@ -81,11 +84,7 @@ def arg_parse():
         "--log_mode", action='store', type=str, required=False, default=MXPrintMode.ABBR.value, help="log mode"
     )
     parser.add_argument(
-        "--append_mac",
-        '-am',
-        action='store_true',  # store_true, store_false
-        required=False,
-        help="append mac address to thing name",
+        "--append_mac", '-am', action='store_false', required=False, help="append mac address to thing name"
     )
     args, unknown = parser.parse_known_args()
 

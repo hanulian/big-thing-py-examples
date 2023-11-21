@@ -15,7 +15,6 @@ import termios
 import asyncio
 
 
-DEFAULT_STORAGE_PATH = os.path.join(get_project_root(), '.test_matter_server')
 DEFAULT_VENDOR_ID = 0xFFF1
 DEFAULT_FABRIC_ID = 1
 DEFAULT_WEBSOCKET_PORT = 5580
@@ -104,7 +103,7 @@ class WebSocketClient:
 
     async def async_get_request_result(self, request: WebsocketRequest):
         result = await request.async_result_queue.get()
-        print(f"Get response for Request ID: {request.id}, Result: {result}")
+        print(f"Get response for Request ID: {request.id}, Command: {request.command}, Result: {result}")
         request.result_queue.put(result)
 
 

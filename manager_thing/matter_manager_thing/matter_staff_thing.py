@@ -34,7 +34,7 @@ class MXMatterStaffThing(MXStaffThing):
         self._websocket_message_id = 0
 
         self._default_tag_list: List[MXTag] = [
-            MXTag(tag)
+            MXTag(tag if check_valid_identifier(tag) else convert_to_valid_string(tag))
             for tag in [
                 self._staff_thing_id,
                 self._device_type.__name__,
@@ -331,4 +331,101 @@ class MXContactSensorMatterStaffThing(MXMatterStaffThing):
             ),
         ]
         staff_function_list = []
+        self.add_staff_service(staff_value_list + staff_function_list)
+
+
+class MXOnOffPlugInUnitMatterStaffThing(MXMatterStaffThing):
+    def __init__(
+        self,
+        name: str,
+        service_list: List[MXService] = [],
+        alive_cycle: float = 10,
+        is_super: bool = False,
+        is_parallel: bool = True,
+        staff_thing_id: str = '',
+        node_id: int = 0,
+        vendor_id: int = 0,
+        product_id: int = 0,
+        device_type: type[DeviceType] = None,
+        send_api_command_func: Callable[[dict, float], Union[dict, bool]] = None,
+    ):
+        super().__init__(
+            name,
+            service_list,
+            alive_cycle,
+            is_super,
+            is_parallel,
+            staff_thing_id,
+            node_id,
+            vendor_id,
+            product_id,
+            device_type,
+            send_api_command_func,
+        )
+
+    @MXStaffThing.print_func_info
+    def On(self) -> bool:
+        command = OnOff.Commands.On
+        ret: dict = self.execute_command(cluster_id=command.cluster_id, command_name=command.__name__)
+        result = ret['result']
+
+        return result
+
+    @MXStaffThing.print_func_info
+    def Off(self) -> bool:
+        command = OnOff.Commands.Off
+        ret: dict = self.execute_command(cluster_id=command.cluster_id, command_name=command.__name__)
+        result = ret['result']
+
+        return result
+
+    @MXStaffThing.print_func_info
+    def Toggle(self) -> bool:
+        command = OnOff.Commands.Toggle
+        ret: dict = self.execute_command(cluster_id=command.cluster_id, command_name=command.__name__)
+        result = ret['result']
+
+        return result
+
+    @MXStaffThing.print_func_info
+    def OnOff(self) -> bool:
+        attribute = OnOff.Attributes.OnOff
+        ret: dict = self.get_attribute_value(cluster_id=attribute.cluster_id, attribute_id=attribute.attribute_id)
+        result = ret['result']
+
+        return result
+
+    @override
+    def make_service_list(self):
+        super().make_service_list()
+
+        staff_value_list = [
+            MXValue(
+                func=self.OnOff,
+                type=MXType.BOOL,
+                bound=(0, 2),
+                tag_list=self._default_tag_list,
+                cycle=5,
+            ),
+        ]
+        staff_function_list = [
+            MXFunction(
+                func=self.On,
+                return_type=MXType.BOOL,
+                arg_list=[],
+                tag_list=self._default_tag_list,
+            ),
+            MXFunction(
+                func=self.Off,
+                return_type=MXType.BOOL,
+                arg_list=[],
+                tag_list=self._default_tag_list,
+            ),
+            MXFunction(
+                func=self.Toggle,
+                return_type=MXType.BOOL,
+                arg_list=[],
+                tag_list=self._default_tag_list,
+            ),
+        ]
         self.add_staff_service(staff_value_list + staff_function_list)

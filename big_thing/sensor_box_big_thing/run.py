@@ -93,12 +93,12 @@ def sense_brightness():
     return lux
 
 
-def sense_sound():
-    return 50
+# def sense_sound():
+#     return 50
 
 
-def sense_dust():
-    return 50
+# def sense_dust():
+#     return 50
 
 
 def sense_VOC():
@@ -118,7 +118,14 @@ def arg_parse():
     parser.add_argument(
         "--alive_cycle", '-ac', action='store', type=int, required=False, default=60, help="alive cycle"
     )
+    parser.add_argument("--auto_scan", '-as', action='store_true', required=False, help="middleware auto scan enable")
     parser.add_argument("--log", action='store_true', dest='log', required=False, default=True, help="log enable")
+    parser.add_argument(
+        "--log_mode", action='store', type=str, required=False, default=MXPrintMode.ABBR.value, help="log mode"
+    )
+    parser.add_argument(
+        "--append_mac", '-am', action='store_false', required=False, help="append mac address to thing name"
+    )
     args, unknown = parser.parse_known_args()
 
     return args
@@ -131,14 +138,16 @@ def generate_thing(args):
 
     function_list = []
     value_list = [
-        MXValue(name='temp', function=sense_temp, type='double', bound=(-100, 100), tag_list=tags, cycle=1),
-        MXValue(name='humid', function=sense_humid, type='double', bound=(0, 100), tag_list=tags, cycle=1),
-        MXValue(name='pressure', function=sense_pressure, type='double', bound=(0, 10000), tag_list=tags, cycle=1),
-        MXValue(name='CO2', function=sense_CO2, type='int', bound=(0, 10000), tag_list=tags, cycle=1),
-        MXValue(name='brightness', function=sense_brightness, type='int', bound=(0, 10000), tag_list=tags, cycle=1),
-        MXValue(name='sound', function=sense_sound, type='int', bound=(0, 10000), tag_list=tags, cycle=1),
-        MXValue(name='dust', function=sense_dust, type='double', bound=(0, 10000), tag_list=tags, cycle=1),
-        MXValue(name='VOC', function=sense_VOC, type='double', bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='temp', func=sense_temp, type=MXType.DOUBLE, bound=(-100, 100), tag_list=tags, cycle=1),
+        MXValue(name='humid', func=sense_humid, type=MXType.DOUBLE, bound=(0, 100), tag_list=tags, cycle=1),
+        MXValue(name='pressure', func=sense_pressure, type=MXType.DOUBLE, bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='CO2', func=sense_CO2, type=MXType.INTEGER, bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(
+            name='brightness', func=sense_brightness, type=MXType.INTEGER, bound=(0, 10000), tag_list=tags, cycle=1
+        ),
+        # MXValue(name='sound', func=sense_sound, type=MXType.INTEGER, bound=(0, 10000), tag_list=tags, cycle=1),
+        # MXValue(name='dust', func=sense_dust, type=MXType.DOUBLE, bound=(0, 10000), tag_list=tags, cycle=1),
+        MXValue(name='VOC', func=sense_VOC, type=MXType.DOUBLE, bound=(0, 10000), tag_list=tags, cycle=1),
     ]
 
     thing = MXBigThing(
@@ -146,6 +155,8 @@ def generate_thing(args):
         ip=args.host,
         port=args.port,
         alive_cycle=args.alive_cycle,
+        log_mode=MXPrintMode.get(args.log_mode),
+        append_mac_address=args.append_mac,
         service_list=function_list + value_list,
     )
     return thing

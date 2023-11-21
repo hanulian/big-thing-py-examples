@@ -1,3 +1,2 @@
 google-cloud-vision
-pytube
-youtube-search-python
+yt-dlp

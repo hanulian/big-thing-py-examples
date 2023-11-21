@@ -1,5 +1,6 @@
 from big_thing_py.poll_manager_thing import *
 from hue_utils import *
+from func_timeout import func_timeout, FunctionTimedOut
 
 
 class MXHueStaffThing(MXStaffThing):
@@ -23,7 +24,7 @@ class MXHueStaffThing(MXStaffThing):
         self._staff_thing_id = self._staff_thing_id.replace(':', '_').replace('-', '_')
 
         self._default_tag_list: List[MXTag] = [
-            MXTag(tag)
+            MXTag(tag if check_valid_identifier(tag) else convert_to_valid_string(tag))
             for tag in [
                 self._name,
                 self._staff_thing_id,
@@ -58,14 +59,14 @@ class MXHueStaffThing(MXStaffThing):
         def decorator(func):
             called = False
 
-            def wrap(self: MXHueStaffThing, *fargs, **fkwargs):
+            def wrap(self: MXHueStaffThing, *args2, **kwargs2):
                 nonlocal called
                 if not called:
                     kwargs = kwargs | dict(tag_list=self._default_tag_list, func=func)
                     value = MXValue(*args, **kwargs)
                     self.add_service(value)
                     called = True
-                return func(self, *fargs, **fkwargs)
+                return func(self, *args2, **kwargs2)
 
             return wrap
 
@@ -76,14 +77,14 @@ class MXHueStaffThing(MXStaffThing):
         def decorator(func):
             called = False
 
-            def wrap(self: MXHueStaffThing, *fargs, **fkwargs):
+            def wrap(self: MXHueStaffThing, *args2, **kwargs2):
                 nonlocal called
                 if not called:
                     kwargs = kwargs | dict(tag_list=self._default_tag_list, func=func)
                     function = MXFunction(*args, **kwargs)
                     self.add_service(function)
                     called = True
-                return func(self, *fargs, **fkwargs)
+                return func(self, *args2, **kwargs2)
 
             return wrap
 
@@ -126,11 +127,19 @@ class MXHueSensorStaffThing(MXHueStaffThing):
 
         staff_value_list = [
             MXValue(
-                name='is_on', func=self.is_on, type=MXType.BOOL, bound=(0, 2), tag_list=self._default_tag_list, cycle=5
+                name='is_on',
+                func=self.is_on,
+                type=MXType.BOOL,
+                bound=(0, 2),
+                tag_list=self._default_tag_list,
+                cycle=5,
             )
         ]
         staff_function_list = []
         self.add_staff_service(staff_value_list + staff_function_list)
+
+        for service in self._value_list + self._function_list:
+            service.add_tag([MXTag('sensor')])
 
 
 class MXHueColorLightStaffThing(MXHueStaffThing):
@@ -210,6 +219,26 @@ class MXHueColorLightStaffThing(MXHueStaffThing):
         else:
             return False
 
+    @MXStaffThing.print_func_info
+    def blink(self, duration: float, blink_rate: float):
+        def wrapper():
+            while True:
+                self.on()
+                time.sleep(blink_rate)
+                self.off()
+                time.sleep(blink_rate)
+
+        try:
+            func_timeout(duration, wrapper)
+        except FunctionTimedOut:
+            self.off()
+        except Exception:
+            return False
+        else:
+            return True
+
+        return True
+
     @override
     def make_service_list(self):
         super().make_service_list()
@@ -276,8 +305,21 @@ class MXHueColorLightStaffThing(MXHueStaffThing):
                 exec_time=3,
                 timeout=3,
             ),
+            MXFunction(
+                name='blink',
+                func=self.blink,
+                return_type=MXType.BOOL,
+                arg_list=[
+                    MXArgument(name='duration', type=MXType.DOUBLE, bound=(0, 100000)),
+                    MXArgument(name='blink_rate', type=MXType.DOUBLE, bound=(0, 100000)),
+                ],
+                tag_list=self._default_tag_list,
+            ),
         ]
         self.add_staff_service(staff_value_list + staff_function_list)
+
+        for service in self._value_list + self._function_list:
+            service.add_tag([MXTag('light')])
 
 
 class MXHueColorLampStaffThing(MXHueColorLightStaffThing):
@@ -454,7 +496,7 @@ class MXHueMotionSensorStaffThing(MXHueSensorStaffThing):
                 type=MXType.BOOL,
                 bound=(0, 2),
                 tag_list=self._default_tag_list,
-                cycle=1,
+                cycle=2,
             ),
             # MXValue(
             #     name='lightlevel',

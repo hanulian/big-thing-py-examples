@@ -17,6 +17,7 @@ class HejHomeAction(Enum):
     CURTAIN_CONTROL = auto()
     BRIGHTNESS = auto()
     COLOR = auto()
+    SET_TEMP = auto()
     STATUS = auto()
 
 

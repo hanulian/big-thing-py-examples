@@ -11,7 +11,8 @@ import coloredlogs
 
 from matter_server.client.client import MatterClient
 from matter_server.server.server import MatterServer
-from big_thing_py.utils import get_project_root
+from pathlib import Path
+
 
 logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ DEFAULT_VENDOR_ID = 0xFFF1
 DEFAULT_FABRIC_ID = 1
 DEFAULT_PORT = 5580
 DEFAULT_URL = f"http://127.0.0.1:{DEFAULT_PORT}/ws"
-DEFAULT_STORAGE_PATH = os.path.join(get_project_root(), ".matter_server")
+DEFAULT_STORAGE_PATH = os.path.join(Path.home(), ".matter_server")
 
 
 # Get parsed passed in arguments.

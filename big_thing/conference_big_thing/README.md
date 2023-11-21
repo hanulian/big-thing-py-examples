@@ -1,11 +1,17 @@
 # 설명
 
-음악 재생 기능을 제공하는 Thing 예제.
+회의록 작성 기능을 제공하는 Thing 예제.
+
+# 의존성
+
+```bash
+./setup.sh
+```
 
 # 실행
 
 ```bash
-cd big_thing/music_player_big_thing
+cd big_thing/conference_big_thing
 python run.py
 ```
 
@@ -35,17 +41,17 @@ python run.py
 
 ## Function Services
 
-- `play(source: str) -> bool`
+- `record_start() -> bool`
 
-  인자로 받은 `source`가 재생가능한 파일 경로인 경우 해당 파일을 재생하고, url인 경우 해당 url으로 부터 음악 파일을 스트리밍받아 재생하는 서비스.
+  회의를 시작하는 서비스.
 
-- `pause_toggle() -> bool`
+- `record_end() -> bool`
 
-  음악이 재생중인 경우 일시정지하고, 멈춰있는 경우 다시 재생하는 서비스.
+  회의를 끝내는 서비스.
 
-- `stop() -> bool`
+- `to_text() -> bool`
 
-  음악 재생을 중지하는 서비스.
+  회의 녹음 파일 경로를 받아 text로 변환하는 서비스.
 
 ## Value Services
 
